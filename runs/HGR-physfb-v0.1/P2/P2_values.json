@@ -1,0 +1,168 @@
+{
+  "S0": {
+    "U(0) (Shooting)": {
+      "value": -0.6495339857038422,
+      "threshold": null,
+      "passed": null,
+      "note": "dimensionslos"
+    },
+    "μ = 4π∫f²ξ²dξ": {
+      "value": 25.914840189959452,
+      "threshold": null,
+      "passed": null,
+      "note": "Literatur ≈ 25.9 (gleiche Skalierung)"
+    },
+    "ξ_c (f²=1/2)": {
+      "value": 1.2992711243372195,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "r_c numerisch [kpc]": {
+      "value": 0.7841655758590701,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "r_c Schive-Fit [kpc]": {
+      "value": 0.7539150094890219,
+      "threshold": null,
+      "passed": null,
+      "note": "empirischer Fit"
+    },
+    "r_c numerisch / Schive": {
+      "value": 1.040124637378623,
+      "threshold": null,
+      "passed": null,
+      "note": "Fit-Genauigkeit ~ wenige %"
+    },
+    "ρ(0) numerisch [M_sun/kpc³]": {
+      "value": 51251945.587257534,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Soliton-Zeitskala T0 = L0²/a [Myr]": {
+      "value": 18.57829794659494,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Residuum direkt interpoliert": {
+      "value": 0.09674586546551202,
+      "threshold": null,
+      "passed": null,
+      "note": "Boxeffekt + Interpolation"
+    },
+    "Residuum nach Politur": {
+      "value": 0.001792974979301997,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Zeit Grundzustand [s]": {
+      "value": 47.630242300001555,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    }
+  },
+  "S1": {
+    "max|ρ(0,t)/ρ(0,0) − 1| über 40.0 Myr": {
+      "value": 0.002114391399924642,
+      "threshold": 0.005,
+      "passed": true,
+      "note": ""
+    },
+    "max Normdrift": {
+      "value": 7.149836278586008e-14,
+      "threshold": 1e-12,
+      "passed": true,
+      "note": ""
+    },
+    "max rel. Energiedrift": {
+      "value": 2.2006380051564634e-08,
+      "threshold": 0.001,
+      "passed": true,
+      "note": ""
+    },
+    "max Schwerpunktsverschiebung [kpc]": {
+      "value": 3.4387534033807904e-14,
+      "threshold": null,
+      "passed": null,
+      "note": "dx = 0.125 kpc"
+    },
+    "Zeitschritt dt [Myr]": {
+      "value": 0.13245033112582782,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Schritte": {
+      "value": 302.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    }
+  },
+  "S2": {
+    "max|ρ−ρ_exakt|/max ρ": {
+      "value": 5.738657887250289e-07,
+      "threshold": 1e-05,
+      "passed": true,
+      "note": "v = 15.06 km/s, σ(t)/σ0 = 2.40"
+    }
+  },
+  "S3": {
+    "max |x_com − v t| [kpc]": {
+      "value": 1.4210854715202004e-14,
+      "threshold": 0.01,
+      "passed": true,
+      "note": "v = 15.06 km/s"
+    },
+    "max |y_com|,|z_com| [kpc]": {
+      "value": 1.5987211554602254e-14,
+      "threshold": 0.01,
+      "passed": true,
+      "note": ""
+    },
+    "max |ρ_max(t)/ρ_max(0) − 1|": {
+      "value": 0.003987369563317911,
+      "threshold": 0.005,
+      "passed": true,
+      "note": "Galilei-Invarianz: Form bleibt erhalten"
+    }
+  },
+  "S4": {
+    "beobachtete Ordnung (Richardson, 3 Lösungen)": {
+      "value": 2.000212015797809,
+      "threshold": 2.0,
+      "passed": true,
+      "note": ""
+    },
+    "beobachtete Ordnung (gegen feinste Lösung)": {
+      "value": 2.0715332806215665,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "‖ψ−ψ_ref‖/‖ψ_ref‖ bei dt=0.5263 Myr": {
+      "value": 1.5053871670494978e-05,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "‖ψ−ψ_ref‖/‖ψ_ref‖ bei dt=0.2632 Myr": {
+      "value": 3.581414231239827e-06,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "‖ψ−ψ_ref‖/‖ψ_ref‖ bei dt=0.1316 Myr": {
+      "value": 7.137213299689869e-07,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    }
+  }
+}

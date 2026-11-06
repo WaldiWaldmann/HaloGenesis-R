@@ -1,0 +1,10 @@
+# Laptop 1 – Reproduktion (n = 10 cm⁻³), v0.9 bereinigt.
+# Isolierter Soliton: Φ̄ = Φ -> τ-Scan redundant; τ = 10 bleibt als NULLTEST (O1 muss = τ=3 sein).
+runs:
+  - {config: configs/default.yaml, N: 64,  tau: 3.0}
+  - {config: configs/default.yaml, N: 128, tau: 3.0}
+  - {config: configs/default.yaml, N: 128, tau: 10.0}                    # Nulltest Filter
+  - {config: configs/default.yaml, N: 64,  tau: 3.0, seed: 11}           # Stichprobenfehler (1 Realisierung)
+  - {config: configs/default.yaml, N: 64,  tau: 3.0, jeans_floor: 4.0}   # n = 10 ist ohne Boden nicht auflösbar
+  - {config: configs/default.yaml, N: 128, tau: 3.0, jeans_floor: 4.0}
+  - {config: configs/default.yaml, N: 256, tau: 3.0, optional: true}

@@ -1,0 +1,258 @@
+{
+  "Lauf": {
+    "Status: regulär beendet": {
+      "value": 10.0,
+      "threshold": null,
+      "passed": null,
+      "note": "t_final [Myr]"
+    },
+    "N / τ [Myr] / n [cm⁻³]": {
+      "value": 48.0,
+      "threshold": null,
+      "passed": null,
+      "note": "τ = 3.0, n = 0.27"
+    },
+    "Makroschritte": {
+      "value": 41.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "ausgelassene Visualisierungsradien (< dx)": {
+      "value": 2.0,
+      "threshold": null,
+      "passed": null,
+      "note": "0.1, 0.15"
+    },
+    "Rechenzeit [s]": {
+      "value": 13.480599003000009,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Grundzustands-Residuum": {
+      "value": 0.0017929749793035347,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Setup: soliton_halo": {
+      "value": 1205418919.982032,
+      "threshold": null,
+      "passed": null,
+      "note": "M_Axion gesamt [M_sun]; Vorrelaxation 20.0 Myr, σ(Φ_c)/|Φ_c| = 0.00819, t_dB = 20.8 Myr"
+    },
+    "Potentialfluktuation σ(Φ_c)/|⟨Φ_c⟩| (A=1)": {
+      "value": 0.01905974736417769,
+      "threshold": null,
+      "passed": null,
+      "note": "isolierter Grundzustand ≈ 0 -> Filter wirkungslos; Halo > 0"
+    },
+    "max|Φ̄_c − Φ_c|/|⟨Φ_c⟩| (A=1)": {
+      "value": 0.01838991116315505,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "max Jeans-Boden-Massenanteil in R_p (A=1 / A=0)": {
+      "value": 0.0,
+      "threshold": null,
+      "passed": null,
+      "note": "A=0: 0; N_J = 0.0"
+    },
+    "max n_H (A=1) [cm⁻³]": {
+      "value": 0.47404915616753057,
+      "threshold": null,
+      "passed": null,
+      "note": "GP98-Niedrigdichte-Limes: n ≲ 10³ cm⁻³"
+    },
+    "lokale Rückfälle 1. Ordnung (Hydro)": {
+      "value": 0.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "ε_filter A=1 (Gl. 45), E_ref = E_int(0)": {
+      "value": 0.0019737274549859727,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "vom Jeans-Boden injizierte Energie / E_int(0) (A=1)": {
+      "value": 0.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "max Truelove-Zahl J = dx/λ_J (A=1, A=0)": {
+      "value": 0.39448250822426484,
+      "threshold": 0.25,
+      "passed": false,
+      "note": "J > 1/4: künstliche Fragmentation möglich -> Ergebnis nicht auflösungsrobust"
+    }
+  },
+  "O1": {
+    "O1(R=0.25) bei t_final": {
+      "value": 0.2001417630453621,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "max O1(R=0.25)": {
+      "value": 0.2001417630453621,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Fluss-Gegenprobe R=0.25, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 0.011799064449615674,
+      "threshold": 0.05,
+      "passed": true,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    },
+    "Fluss-Gegenprobe R=0.25, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 2.42862426293479,
+      "threshold": 0.05,
+      "passed": false,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    },
+    "O1(R=0.5) bei t_final": {
+      "value": 0.19741574580826213,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "max O1(R=0.5)": {
+      "value": 0.19741574580826213,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Fluss-Gegenprobe R=0.5, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 0.02529405559792982,
+      "threshold": 0.05,
+      "passed": true,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    },
+    "Fluss-Gegenprobe R=0.5, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 1.258376640933499,
+      "threshold": 0.05,
+      "passed": false,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    },
+    "O1(R=1.0) bei t_final": {
+      "value": 0.13553959436420743,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "max O1(R=1.0)": {
+      "value": 0.13553959436420743,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "Fluss-Gegenprobe R=1.0, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 0.02007035817486162,
+      "threshold": 0.05,
+      "passed": true,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    },
+    "Fluss-Gegenprobe R=1.0, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+      "value": 0.8132713661707281,
+      "threshold": 0.05,
+      "passed": false,
+      "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+    }
+  },
+  "O2": {
+    "O2(A=1) Zeitanteil min_R Q < 1": {
+      "value": 1.0,
+      "threshold": null,
+      "passed": null,
+      "note": "Intervalle: [0.00, 10.00]"
+    },
+    "min Q (A=1)": {
+      "value": 0.01791165164533826,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "O2(A=0) Zeitanteil min_R Q < 1": {
+      "value": 1.0,
+      "threshold": null,
+      "passed": null,
+      "note": "Intervalle: [0.00, 10.00]"
+    },
+    "min Q (A=0)": {
+      "value": 0.021948501637281136,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "ΔO2 = O2(1) − O2(0)": {
+      "value": 0.0,
+      "threshold": null,
+      "passed": null,
+      "note": "Hypothese: > 0"
+    }
+  },
+  "O3": {
+    "O3(R=0.5) Mittel für t ≤ 2.0 Myr": {
+      "value": 0.9999402023107616,
+      "threshold": 0.9,
+      "passed": true,
+      "note": "Gl. 30: O3 → 1 früh"
+    },
+    "Impulsbudget früh: max ‖δv − ∫δg dt‖/‖δv‖": {
+      "value": 0.001333975418266896,
+      "threshold": null,
+      "passed": null,
+      "note": "Rest = Druck/Advektion R(t)"
+    },
+    "O3(R=0.25) zeitgemittelt": {
+      "value": 0.9952100326860547,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "O3(R=0.5) zeitgemittelt": {
+      "value": 0.9962316025604583,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "O3(R=1.0) zeitgemittelt": {
+      "value": 0.9977741616177427,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    }
+  },
+  "Vergleich": {
+    "C_ρ Aperturmittel R=0.25 (A=1), max": {
+      "value": 1.2215737064593089,
+      "threshold": null,
+      "passed": null,
+      "note": "Arbeit: ~50.0"
+    },
+    "C_ρ Aperturmittel R=0.25 bei t≈1.20 Myr": {
+      "value": 1.0030498007335933,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "C_ρ Einzelzelle Zentrum (A=1), max": {
+      "value": 1.214257898805917,
+      "threshold": null,
+      "passed": null,
+      "note": "NICHT gleichwertig zu aufgelöster Dichte (Research Plan §2)"
+    },
+    "Dauer min_R Q<1 (A=1) [Myr]": {
+      "value": 10.0,
+      "threshold": null,
+      "passed": null,
+      "note": "Arbeit: 5.8 Myr"
+    }
+  }
+}

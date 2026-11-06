@@ -1,0 +1,634 @@
+{
+  "stage": "P5_N48_tau3_n0.27_t10_soliton_halo",
+  "created_utc": "2026-10-19T21:19:48.082799+00:00",
+  "run_label": "HGR-physfb-v0.1",
+  "provenance": "NEU GEWAEHLT (Rekonstruktion, Okt. 2026) - keine historischen Eingabewerte",
+  "config_path": "/home/claude/HaloGenesis-R/configs/physical_fb.yaml",
+  "config_sha256": "be83c7d739d6332a4a2ee8624fa73f9e3ff4eb8eac7261e05d7e58725cb85d7f",
+  "config": {
+    "meta": {
+      "run_label": "HGR-physfb-v0.1",
+      "provenance": "NEU GEWAEHLT (Rekonstruktion, Okt. 2026) - keine historischen Eingabewerte",
+      "seed": 20261019
+    },
+    "axion": {
+      "m22": 1.0,
+      "soliton_mass_msun": 292000000.0,
+      "self_interaction_lambda": 0.0
+    },
+    "gas": {
+      "n_cm3": 0.27,
+      "T_K": 1000.0,
+      "mu": 1.2,
+      "gamma": 1.6666666666666667,
+      "initial_velocity_kms": 0.0,
+      "perturbation_rel_amplitude": 0.001,
+      "cooling_model": "piecewise_historical",
+      "cooling_params": {
+        "X_H": 0.76,
+        "x_H2": 0.0005,
+        "T_floor_K": 57.2
+      }
+    },
+    "domain": {
+      "box_kpc": 8.0,
+      "N_dev": 128,
+      "N_prod": 256,
+      "boundary": "periodic"
+    },
+    "time": {
+      "t_end_myr": 30.0,
+      "cfl_hydro": 0.3,
+      "sp_kinetic_dt_factor": 0.1666666667,
+      "sp_potential_phase_max_rad": 0.5,
+      "grav_cfl": 0.3,
+      "freefall_dt_fraction": 0.05
+    },
+    "filter": {
+      "kernel": "trailing_boxcar",
+      "tau_myr": 3.0,
+      "tau_scan_myr": [
+        0.0,
+        0.001,
+        1.0,
+        3.0,
+        10.0
+      ]
+    },
+    "analysis": {
+      "apertures_kpc": [
+        0.25,
+        0.5,
+        1.0
+      ],
+      "primary_aperture_kpc": 0.5,
+      "jeans_threshold": 1.0,
+      "t_window_myr": [
+        0.0,
+        30.0
+      ],
+      "full_snapshot_times_myr": [
+        0.0,
+        1.2,
+        5.0,
+        10.0,
+        20.0,
+        30.0
+      ]
+    },
+    "scans": {
+      "n_cm3": [
+        0.001,
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "N_convergence": [
+        64,
+        128,
+        256
+      ],
+      "m22": [
+        0.5,
+        1.0,
+        1.23,
+        2.0
+      ]
+    },
+    "compute": {
+      "fft_workers": -1,
+      "fft_backend": "scipy",
+      "dtype": "float64"
+    },
+    "viz": {
+      "dpi": 150,
+      "iso_max_points_per_axis": 40
+    },
+    "historical_reference": {
+      "soliton_mass_msun": 292000000.0,
+      "soliton_mass_err_msun": 3000000.0,
+      "core_radius_kpc": 0.5,
+      "central_gas_enhancement": 50.0,
+      "t_sim_myr": 1.2,
+      "t_ff_reported_myr": 0.3,
+      "jeans_duration_myr": 5.8,
+      "total_evolution_myr_research_plan": 20.0,
+      "min_jeans_ratio": 0.0058,
+      "median_jeans_ratio": 4300.0,
+      "gas_mass_max_msun": 25000000.0,
+      "epsilon_reported": [
+        0.001,
+        0.01
+      ],
+      "sound_speed_reported_kms": 2.62,
+      "averaging_window_yr": 1000.0,
+      "max_norm_drift": 5.4e-14,
+      "max_energy_error": 4e-05,
+      "poisson_residual_median_unnormalized": 5200.0
+    },
+    "validation_p1": {
+      "N_main": 128,
+      "fourier_mode_rel_err_max": 1e-12,
+      "gauss_mass_msun": 100000000.0,
+      "gauss_sigma_kpc": 0.3,
+      "gauss_bgcorr_rel_err_max": 0.001,
+      "soliton_force_rel_err_max": 0.01,
+      "box_sizes_kpc": [
+        4.0,
+        8.0,
+        16.0
+      ],
+      "box_test_dx_kpc": 0.0625,
+      "convergence_N": [
+        16,
+        32,
+        64,
+        128
+      ],
+      "convergence_N_ref": 256,
+      "convergence_sigmas_kpc": [
+        0.15,
+        0.2,
+        0.3,
+        0.45,
+        0.6
+      ],
+      "invariance_rel_err_max": 1e-12,
+      "timing_N": [
+        32,
+        64,
+        96,
+        128,
+        192,
+        256
+      ],
+      "timing_repeats": 3
+    },
+    "sp": {
+      "polish_coarse_n": 32,
+      "polish_coarse_steps": 800,
+      "polish_coarse_dtau_T0": [
+        0.2,
+        0.005
+      ],
+      "polish_fine_steps": 40,
+      "polish_fine_dtau_T0": [
+        0.005,
+        0.002
+      ]
+    },
+    "hydro": {
+      "limiter": "vanleer",
+      "jeans_floor_NJ": 0.0
+    },
+    "setup": {
+      "kind": "soliton_halo",
+      "halo_mass_ratio": 3.0,
+      "halo_sigma_kms": 30.0,
+      "halo_core_kpc": 1.5,
+      "halo_seed": 7,
+      "halo_relax_myr": 20.0
+    },
+    "validation_p2": {
+      "N_main": 64,
+      "t_stationary_myr": 40.0,
+      "rho0_variation_max": 0.005,
+      "norm_drift_max": 1e-12,
+      "energy_drift_max": 0.001,
+      "packet_sigma_kpc": 0.3,
+      "packet_t_myr": 20.0,
+      "packet_rel_err_max": 1e-05,
+      "boost_modes": 1,
+      "boost_t_myr": 20.0,
+      "com_err_max_kpc": 0.01,
+      "order_N": 32,
+      "order_t_myr": 10.0,
+      "order_kin_factors": [
+        0.1666666667,
+        0.0833333333,
+        0.0416666667,
+        0.0208333333
+      ],
+      "order_expected": 2.0,
+      "order_tol": 0.3
+    },
+    "validation_p3": {
+      "sod_N": [
+        100,
+        200,
+        400,
+        800
+      ],
+      "sod_t": 0.1,
+      "sod_cfl": 0.4,
+      "sod_l1_max_at_400": 0.005,
+      "sod_order_min": 0.8,
+      "conservation_N": 32,
+      "conservation_steps": 50,
+      "conservation_rel_max": 1e-12,
+      "jeans_N": 64,
+      "jeans_kJ_modes": 2.0,
+      "jeans_modes": [
+        1,
+        3,
+        4
+      ],
+      "jeans_amp": 0.0001,
+      "jeans_periods": 2.0,
+      "jeans_rel_err_max": 0.02,
+      "hydrostatic_N": 64,
+      "hydrostatic_log_contrast": 3.0,
+      "hydrostatic_t_myr": 30.0,
+      "hydrostatic_vmax_over_cs_max": 0.05,
+      "cooling_n_cm3": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "cooling_T0_K": 5000.0,
+      "cooling_dt_myr": 0.1,
+      "cooling_rel_err_max": 1e-06
+    },
+    "validation_p4": {
+      "N": 32,
+      "filter_rel_err_max": 1e-12,
+      "bias_taus_myr": [
+        0.5,
+        1.0,
+        2.0,
+        4.0,
+        8.0
+      ],
+      "bias_omegas_per_myr": [
+        0.05,
+        0.1,
+        0.2,
+        0.5,
+        1.0
+      ],
+      "limit_n_cm3": 1e-06,
+      "limit_t_myr": 10.0,
+      "soliton_var_max": 0.005,
+      "null_identity_rel_max": 1e-12,
+      "null_steps": 10,
+      "momentum_t_myr": 10.0,
+      "momentum_tau_values_myr": [
+        0.0,
+        3.0
+      ],
+      "momentum_rel_max_tau0": 0.01
+    },
+    "p5": {
+      "N": 48,
+      "t_end_myr": 30.0,
+      "dt_max_myr": 0.25,
+      "dt_min_abort_myr": 0.0001,
+      "viz_radii_kpc": [
+        0.1,
+        0.15,
+        0.25,
+        0.35,
+        0.5,
+        0.75,
+        1.0,
+        1.5
+      ],
+      "early_window_myr": 2.0,
+      "o3_early_min": 0.9,
+      "flux_consistency_max": 0.05
+    },
+    "p6": {
+      "eval_times_myr": [
+        5.0,
+        10.0,
+        20.0,
+        30.0
+      ],
+      "truelove_max": 0.25,
+      "o2_saturation": 0.95,
+      "o3_early_min": 0.9,
+      "momentum_budget_early_max": 0.05,
+      "flux_residual_M0_max": 0.02,
+      "floor_mass_fraction_max": 0.1,
+      "seed_sigma_factor": 2.0
+    },
+    "validation_p4x": {
+      "N": 48,
+      "t_myr": 30.0,
+      "halo_fluct_factor_min": 10.0,
+      "floor_NJ": 4.0,
+      "floor_rel_tol": 1e-12,
+      "cool_order_tol": 0.15
+    }
+  },
+  "source_sha256": {
+    "hgr/__init__.py": "5565f82e463ecd0a5bbf8fd2307fb8b910162c2323f6adbc0f8d6fc8ce657cde",
+    "hgr/analytic.py": "b28ea9ff7a761e0fdcc93650d22024a51b5034b20c7c229783d52d8cfeb7d573",
+    "hgr/config.py": "7d488dfcaecfe1a2285c1bb40f49c18443da3b96c3a7be05f4f4b9056e84f91b",
+    "hgr/cooling.py": "42271393bfbe44808c557f4e2e468dc4934040158bdd20d6cc294f1746eb2117",
+    "hgr/coupled.py": "9ba0290097578387535ec5ac156fc586c0fc81583e71f9d07d44f793c9e8cc39",
+    "hgr/grid.py": "a846f3bfb7de1c3c52bd276bb92ab3e4e9c7d6afaa3854b732354f49be9bda55",
+    "hgr/hydro.py": "318f03014281ce808350f5ad09baedad4b954b447a71d886be236f6286d710d4",
+    "hgr/kernels.py": "f86e70a4487549e78d99eab45df74bfdfddc1a14bd61715ebcc6fd5446813100",
+    "hgr/observables.py": "80da58d91e95c4dba9db747598362f23f3e13b40af845392b483a221dd683b57",
+    "hgr/poisson.py": "25ab146d53d67144b470051cec3108348f144974d2be149143e4c5fc537a2231",
+    "hgr/report.py": "892a885644447f0186d854155b3d3ae27ab90eda3d2618e7c988e75d687861ca",
+    "hgr/riemann_exact.py": "eb3aa7e49ae543d732ffb43ef1e7737fbcbfd897f5cc5c55ee584d7b233d00fe",
+    "hgr/schroedinger.py": "71b9fc33adaa4afbd494b82395ef7af05ac3d4e71df1a6f41b1c572d5a93d700",
+    "hgr/setup.py": "1ea09d6f58efb26b5423522a72dd7d3c53a52c14af826d17e9123f99b4a1c0b0",
+    "hgr/soliton.py": "63e86e978aa8a9de4fcc92cf58af6d23617526874b3ec1b15b2330b397ccbc31",
+    "hgr/units.py": "06206c22ce96c14de838f07b961f332a7614cb4a4db2cd19f03b501bb6e039ee",
+    "hgr/viz.py": "f713d990d567f2edcb19b1802b43436533c768a721a8661e4915679d56a4bc18",
+    "scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/p0_manifest.py": "1514cfedca1c411482798e4ac463cca73270a3eda77a3d66435be6d48fc628ba",
+    "scripts/p1_poisson_validation.py": "b5bc7b7eae7b9a1bd752fe23fd3a81002fd9663882fb27f7230c616073f953da",
+    "scripts/p2_sp_validation.py": "29fe82254e47df50f1785076a44470b07fd18f631dc1c795513d6d71ba2ce033",
+    "scripts/p3_hydro_validation.py": "530e272cd16b667f5b4c9e3db344ef8565fd213500cceae9fde6b1e6246a51ff",
+    "scripts/p4_coupling_validation.py": "549450c51a589b178373bc1599020ceb94cc1150df162cc20866906b4f3583f7",
+    "scripts/p4x_extensions_validation.py": "eb73f9a2f7e1a8658e6a0402411b03b56d718e62188be5b36f60f375c101e6a1",
+    "scripts/p5_observables.py": "1e4448aabb0c6c0a7682295c5a0bbb57efed4e97752199560654da3bfa7eda5d",
+    "scripts/p6_analyze.py": "82332c7a5ab2a55e4078e7745e1e0bfce9e3794a05ebb4e598029c3b488dc0d8",
+    "scripts/p6_campaign.py": "1c0417f3b76f117cca13e9510604e2c343942f03732a6a5bb39ed6cae22d1eca"
+  },
+  "python": "3.12.3 (main, Mar  3 2026, 12:15:18) [GCC 13.3.0]",
+  "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+  "packages": {
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.10.8",
+    "astropy": "8.0.2",
+    "plotly": "7.1.0",
+    "PyYAML": "6.0.3",
+    "numba": "0.68.0"
+  },
+  "results": {
+    "overrides": {
+      "N": 48,
+      "t_end": 10.0,
+      "tau": 3.0,
+      "n_cm3": 0.27,
+      "seed": 20261019,
+      "setup": "soliton_halo",
+      "jeans_NJ": 0.0,
+      "cooling": "piecewise_historical"
+    },
+    "Lauf": {
+      "Status: regulär beendet": {
+        "value": 10.0,
+        "threshold": null,
+        "passed": null,
+        "note": "t_final [Myr]"
+      },
+      "N / τ [Myr] / n [cm⁻³]": {
+        "value": 48.0,
+        "threshold": null,
+        "passed": null,
+        "note": "τ = 3.0, n = 0.27"
+      },
+      "Makroschritte": {
+        "value": 41.0,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "ausgelassene Visualisierungsradien (< dx)": {
+        "value": 2.0,
+        "threshold": null,
+        "passed": null,
+        "note": "0.1, 0.15"
+      },
+      "Rechenzeit [s]": {
+        "value": 13.480599003000009,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "Grundzustands-Residuum": {
+        "value": 0.0017929749793035347,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "Setup: soliton_halo": {
+        "value": 1205418919.982032,
+        "threshold": null,
+        "passed": null,
+        "note": "M_Axion gesamt [M_sun]; Vorrelaxation 20.0 Myr, σ(Φ_c)/|Φ_c| = 0.00819, t_dB = 20.8 Myr"
+      },
+      "Potentialfluktuation σ(Φ_c)/|⟨Φ_c⟩| (A=1)": {
+        "value": 0.01905974736417769,
+        "threshold": null,
+        "passed": null,
+        "note": "isolierter Grundzustand ≈ 0 -> Filter wirkungslos; Halo > 0"
+      },
+      "max|Φ̄_c − Φ_c|/|⟨Φ_c⟩| (A=1)": {
+        "value": 0.01838991116315505,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "max Jeans-Boden-Massenanteil in R_p (A=1 / A=0)": {
+        "value": 0.0,
+        "threshold": null,
+        "passed": null,
+        "note": "A=0: 0; N_J = 0.0"
+      },
+      "max n_H (A=1) [cm⁻³]": {
+        "value": 0.47404915616753057,
+        "threshold": null,
+        "passed": null,
+        "note": "GP98-Niedrigdichte-Limes: n ≲ 10³ cm⁻³"
+      },
+      "lokale Rückfälle 1. Ordnung (Hydro)": {
+        "value": 0.0,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "ε_filter A=1 (Gl. 45), E_ref = E_int(0)": {
+        "value": 0.0019737274549859727,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "vom Jeans-Boden injizierte Energie / E_int(0) (A=1)": {
+        "value": 0.0,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "max Truelove-Zahl J = dx/λ_J (A=1, A=0)": {
+        "value": 0.39448250822426484,
+        "threshold": 0.25,
+        "passed": false,
+        "note": "J > 1/4: künstliche Fragmentation möglich -> Ergebnis nicht auflösungsrobust"
+      }
+    },
+    "O1": {
+      "O1(R=0.25) bei t_final": {
+        "value": 0.2001417630453621,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "max O1(R=0.25)": {
+        "value": 0.2001417630453621,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "Fluss-Gegenprobe R=0.25, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 0.011799064449615674,
+        "threshold": 0.05,
+        "passed": true,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      },
+      "Fluss-Gegenprobe R=0.25, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 2.42862426293479,
+        "threshold": 0.05,
+        "passed": false,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      },
+      "O1(R=0.5) bei t_final": {
+        "value": 0.19741574580826213,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "max O1(R=0.5)": {
+        "value": 0.19741574580826213,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "Fluss-Gegenprobe R=0.5, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 0.02529405559792982,
+        "threshold": 0.05,
+        "passed": true,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      },
+      "Fluss-Gegenprobe R=0.5, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 1.258376640933499,
+        "threshold": 0.05,
+        "passed": false,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      },
+      "O1(R=1.0) bei t_final": {
+        "value": 0.13553959436420743,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "max O1(R=1.0)": {
+        "value": 0.13553959436420743,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "Fluss-Gegenprobe R=1.0, A=1: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 0.02007035817486162,
+        "threshold": 0.05,
+        "passed": true,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      },
+      "Fluss-Gegenprobe R=1.0, A=0: max|ΔM − ∫F dt|/max|ΔM|": {
+        "value": 0.8132713661707281,
+        "threshold": 0.05,
+        "passed": false,
+        "note": "zweiter, unabhängiger Rechenweg (Gl. 22)"
+      }
+    },
+    "O2": {
+      "O2(A=1) Zeitanteil min_R Q < 1": {
+        "value": 1.0,
+        "threshold": null,
+        "passed": null,
+        "note": "Intervalle: [0.00, 10.00]"
+      },
+      "min Q (A=1)": {
+        "value": 0.01791165164533826,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "O2(A=0) Zeitanteil min_R Q < 1": {
+        "value": 1.0,
+        "threshold": null,
+        "passed": null,
+        "note": "Intervalle: [0.00, 10.00]"
+      },
+      "min Q (A=0)": {
+        "value": 0.021948501637281136,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "ΔO2 = O2(1) − O2(0)": {
+        "value": 0.0,
+        "threshold": null,
+        "passed": null,
+        "note": "Hypothese: > 0"
+      }
+    },
+    "O3": {
+      "O3(R=0.5) Mittel für t ≤ 2.0 Myr": {
+        "value": 0.9999402023107616,
+        "threshold": 0.9,
+        "passed": true,
+        "note": "Gl. 30: O3 → 1 früh"
+      },
+      "Impulsbudget früh: max ‖δv − ∫δg dt‖/‖δv‖": {
+        "value": 0.001333975418266896,
+        "threshold": null,
+        "passed": null,
+        "note": "Rest = Druck/Advektion R(t)"
+      },
+      "O3(R=0.25) zeitgemittelt": {
+        "value": 0.9952100326860547,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "O3(R=0.5) zeitgemittelt": {
+        "value": 0.9962316025604583,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "O3(R=1.0) zeitgemittelt": {
+        "value": 0.9977741616177427,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      }
+    },
+    "Vergleich": {
+      "C_ρ Aperturmittel R=0.25 (A=1), max": {
+        "value": 1.2215737064593089,
+        "threshold": null,
+        "passed": null,
+        "note": "Arbeit: ~50.0"
+      },
+      "C_ρ Aperturmittel R=0.25 bei t≈1.20 Myr": {
+        "value": 1.0030498007335933,
+        "threshold": null,
+        "passed": null,
+        "note": ""
+      },
+      "C_ρ Einzelzelle Zentrum (A=1), max": {
+        "value": 1.214257898805917,
+        "threshold": null,
+        "passed": null,
+        "note": "NICHT gleichwertig zu aufgelöster Dichte (Research Plan §2)"
+      },
+      "Dauer min_R Q<1 (A=1) [Myr]": {
+        "value": 10.0,
+        "threshold": null,
+        "passed": null,
+        "note": "Arbeit: 5.8 Myr"
+      }
+    }
+  }
+}

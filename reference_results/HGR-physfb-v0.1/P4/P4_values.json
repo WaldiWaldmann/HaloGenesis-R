@@ -1,0 +1,76 @@
+{
+  "C1": {
+    "Filter exakt für konstantes Φ (ungleiche Schritte)": {
+      "value": 2.220446049250313e-16,
+      "threshold": 1e-12,
+      "passed": true,
+      "note": ""
+    },
+    "lineares Φ: rel. Fehler (Vorab-Schwelle 'exakt' war FALSCH begründet)": {
+      "value": 0.0015768019264349117,
+      "threshold": null,
+      "passed": null,
+      "note": "Gl. 42 ist nur für konstantes Φ exakt; Wert bleibt zur Transparenz stehen"
+    },
+    "lineares Φ: Fehler / Schranke βΔt²/(8w) (hergeleitet)": {
+      "value": 0.9750091087475237,
+      "threshold": 1.0,
+      "passed": true,
+      "note": ""
+    },
+    "max Bias / Schranke Lτ/2 (Gl. 43)": {
+      "value": 0.9999302693380537,
+      "threshold": 1.0,
+      "passed": true,
+      "note": "≤ 1 bestätigt die Schranke"
+    }
+  },
+  "C2": {
+    "max|ρ_a(0,t)/ρ_a(0,0) − 1| (Gas vernachlässigbar)": {
+      "value": 0.0016820033222679776,
+      "threshold": 0.005,
+      "passed": true,
+      "note": ""
+    }
+  },
+  "C3": {
+    "max|U(A=1)−U(A=0)|/max|U| nach 10 Schritten (ψ≡0)": {
+      "value": 0.0,
+      "threshold": 1e-12,
+      "passed": true,
+      "note": "Ablation ändert NUR die Axionquelle"
+    }
+  },
+  "C4": {
+    "τ=0.0: max|ΔP_ges| / max Σ|ρv|": {
+      "value": 6.06286331715706e-11,
+      "threshold": 0.01,
+      "passed": true,
+      "note": "Splitting-Fehler"
+    },
+    "τ=0.0: Makroschritte / mittlere SP-Teilschritte": {
+      "value": 40.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "τ=3.0: max|ΔP_ges| / max Σ|ρv|": {
+      "value": 1.532305533160444e-08,
+      "threshold": null,
+      "passed": null,
+      "note": "τ>0: Asymmetrie Axion↔Gas (Research Plan §8.3)"
+    },
+    "τ=3.0: ε_filter (Gl. 45), E_ref = E_int(0)": {
+      "value": 0.0003040850366504253,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    },
+    "τ=3.0: Makroschritte / mittlere SP-Teilschritte": {
+      "value": 40.0,
+      "threshold": null,
+      "passed": null,
+      "note": ""
+    }
+  }
+}
