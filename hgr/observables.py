@@ -1,15 +1,3 @@
-"""P5 – Observablen O1–O3 (Research Plan §15) und ihre unabhängigen Gegenproben.
-
-Aperturen: kugelförmig um das Boxzentrum, Zellen mit ihrem VOLUMENANTEIL gewichtet
-(4³ Unterabtastung je Zelle) -> konservative Behandlung des Aperturrands, keine Einzelzellen.
-
-O1(R,t) = ln[ (M₁(R,t)/M₁(R,0)) / (M₀(R,t)/M₀(R,0)) ]                         (Gl. 21)
-   Gegenprobe: dM/dt = −∮ρv·dS = ∫ ρv·∇w dV  (w = Aperturgewicht), zeitintegriert   (Gl. 22)
-O2(A)   = Zeitanteil mit min_R Q_A(R,t) < 1, Q = M_J/M_b(<R), Übergänge linear in ln Q
-          zwischen Ausgaben interpoliert (Endpunkte eingegrenzt, nicht auf Ausgaben gerundet) (Gl. 25)
-O3(R,t) = ⟨ρ₀ δg·δv⟩ / (⟨ρ₀|δg|²⟩^½ ⟨ρ₀|δv|²⟩^½),  δg = −∇(Φ̄₁−Φ̄₀), δv = v₁−v₀   (Gl. 28)
-   Gegenprobe: δv(t) vs ∫δg dt (Impulsbudget, Gl. 30); Rest = Druck/Advektion R(t)
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -19,7 +7,6 @@ from .hydro import pressure
 
 
 def aperture_weights(grid: Grid3D, R: float, sub: int = 4) -> np.ndarray:
-    """Volumenanteil jeder Zelle innerhalb der Kugel |x| < R (Zellmitte = Gitterpunkt)."""
     off = (np.arange(sub) + 0.5) / sub - 0.5
     x = grid.x1d
     frac = np.zeros(grid.shape)
@@ -40,13 +27,10 @@ def aperture_mass(rho: np.ndarray, w: np.ndarray, dV: float) -> float:
 
 
 def flux_rate(U: np.ndarray, gw: tuple[np.ndarray, ...], dV: float) -> float:
-    """dM/dt über die Aperturoberfläche, berechnet als ∫ ρv·∇w dV (unabhängig von M selbst)."""
     return float(sum(np.sum(U[1 + d] * gw[d]) for d in range(3)) * dV)
 
 
 def jeans_Q(U: np.ndarray, w: np.ndarray, dV: float, gamma: float, G: float) -> tuple[float, float, float]:
-    """Q = M_J/M_b(<R) mit aperturgemittelter Dichte und massengewichtetem c_s² (adiabatisch γP/ρ).
-    Gibt (Q, M_J, M_b) zurück."""
     M = aperture_mass(U[0], w, dV)
     V = float(np.sum(w) * dV)
     cs2 = float(np.sum(w * gamma * pressure(U, gamma)) / np.sum(w * U[0]))
@@ -60,7 +44,7 @@ def o3_coherence(rho0: np.ndarray, dg: tuple, dv: tuple, w: np.ndarray) -> float
     ng = np.sqrt(sum(np.sum(w * rho0 * dg[d] ** 2) for d in range(3)))
     nv = np.sqrt(sum(np.sum(w * rho0 * dv[d] ** 2) for d in range(3)))
     if ng == 0 or nv == 0:
-        return float("nan")  # undefiniert, NICHT null (Research Plan §15.3)
+        return float("nan")
     return float(num / (ng * nv))
 
 
@@ -69,8 +53,6 @@ def weighted_norm(rho0: np.ndarray, f: tuple, w: np.ndarray) -> float:
 
 
 def occupancy(t: np.ndarray, q: np.ndarray, threshold: float) -> tuple[float, list[tuple[float, float]]]:
-    """Zeitanteil mit q < threshold; Übergänge in ln q linear interpoliert.
-    Gibt (Anteil, Liste der Intervalle) zurück."""
     t, lq, lth = np.asarray(t), np.log(np.asarray(q)), np.log(threshold)
     below = lq < lth
     intervals, start = [], (t[0] if below[0] else None)
@@ -89,15 +71,12 @@ def occupancy(t: np.ndarray, q: np.ndarray, threshold: float) -> tuple[float, li
 
 
 def truelove_number(U: np.ndarray, gamma: float, G: float, dx: float) -> float:
-    """J = dx/λ_J (max über Gitter). Truelove et al. 1997: künstliche Fragmentation, wenn J > 1/4."""
     cs = np.sqrt(gamma * pressure(U, gamma) / U[0])
     lam = cs * np.sqrt(np.pi / (G * U[0]))
     return float(dx / lam.min())
 
 
 class Aperture:
-    """Kugelapertur mit Zuschnitt auf ihre Bounding-Box (+1 Zelle für ∇w).
-    Alle Summen laufen nur über den Zuschnitt (für R ≤ 1 kpc bei L = 8 kpc: < 2 % der Zellen)."""
 
     def __init__(self, grid: Grid3D, R: float, with_gradient: bool, sub: int = 4) -> None:
         w = aperture_weights(grid, R, sub)
@@ -110,11 +89,9 @@ class Aperture:
         self.R = R
         c, self.n = grid.center_index, grid.n
         self.rel = tuple(np.arange(sl_.start, sl_.stop) - c for sl_ in self.sl)
-        self.idx = self.sl  # Boxzentrum: einfache Slices (schnell)
+        self.idx = self.sl
 
     def set_center(self, ci: tuple[int, int, int]) -> None:
-        """Apertur auf Gitterzelle ci verschieben (periodisch). Gewichte bleiben exakt gültig,
-        da die Verschiebung ganzzahlig ist."""
         if all(int(a) == self.n // 2 for a in ci):
             self.idx = self.sl
         else:
@@ -138,8 +115,6 @@ class Aperture:
 
 
 def track_center(rho_a: np.ndarray, prev: tuple[int, int, int], track: "Aperture", max_iter: int = 8):
-    """Schwerpunkt von ρ_a in Kugel (Radius track.R) um prev, iteriert bis stationär, auf Gitterzelle
-    gerundet. Periodisch korrekt (Offsets relativ zum Zentrum, Indizes modulo N)."""
     ci = tuple(int(a) for a in prev)
     for _ in range(max_iter):
         track.set_center(ci)
@@ -147,8 +122,10 @@ def track_center(rho_a: np.ndarray, prev: tuple[int, int, int], track: "Aperture
         tot = w.sum()
         if tot <= 0:
             return ci
-        off = [float(np.sum(w * r.reshape([-1 if k == ax else 1 for k in range(3)])) / tot)
-               for ax, r in enumerate(track.rel)]
+        off = [
+            float(np.sum(w * r.reshape([-1 if k == ax else 1 for k in range(3)])) / tot)
+            for ax, r in enumerate(track.rel)
+        ]
         new = tuple((ci[k] + int(round(off[k]))) % track.n for k in range(3))
         if new == ci:
             return ci
@@ -157,5 +134,4 @@ def track_center(rho_a: np.ndarray, prev: tuple[int, int, int], track: "Aperture
 
 
 def truelove_from_pressure(rho: np.ndarray, P: np.ndarray, gamma: float, G: float, dx: float) -> float:
-    """J = dx/min λ_J mit λ_J = √(γP/ρ)·√(π/(Gρ)) = √(γπ/G · P/ρ²) -> ein Durchlauf über P/ρ²."""
     return float(dx / np.sqrt(gamma * np.pi / G * np.min(P / rho**2)))

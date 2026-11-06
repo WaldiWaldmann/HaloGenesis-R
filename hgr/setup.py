@@ -1,4 +1,3 @@
-"""Gemeinsame Initialisierung für alle gekoppelten Läufe (eine Quelle -> keine Konfundierung)."""
 from __future__ import annotations
 
 import numpy as np
@@ -12,27 +11,43 @@ from .units import G_CODE, KMS_TO_CODE, AxionUnits, gas_mass_density
 
 def polish_cfg(cfg: dict) -> dict:
     sp = cfg["sp"]
-    return {"coarse_n": sp["polish_coarse_n"], "coarse_steps": sp["polish_coarse_steps"],
-            "coarse_dtau_T0": sp["polish_coarse_dtau_T0"], "fine_steps": sp["polish_fine_steps"],
-            "fine_dtau_T0": sp["polish_fine_dtau_T0"]}
+    return {
+        "coarse_n": sp["polish_coarse_n"],
+        "coarse_steps": sp["polish_coarse_steps"],
+        "coarse_dtau_T0": sp["polish_coarse_dtau_T0"],
+        "fine_steps": sp["polish_fine_steps"],
+        "fine_dtau_T0": sp["polish_fine_dtau_T0"],
+    }
 
 
 def coupling_params(cfg: dict, tau: float) -> CouplingParams:
     gp, tp = cfg["gas"], cfg["time"]
-    return CouplingParams(a=AxionUnits(cfg["axion"]["m22"]).hbar_over_m, G=G_CODE, gamma=gp["gamma"],
-                          mu=gp["mu"], T0=gp["T_K"], cooling_model=gp["cooling_model"],
-                          limiter=cfg["hydro"]["limiter"], cfl=tp["cfl_hydro"],
-                          sp_kin_factor=tp["sp_kinetic_dt_factor"], sp_phase_max=tp["sp_potential_phase_max_rad"],
-                          tau=tau, workers=cfg["compute"]["fft_workers"], grav_cfl=tp["grav_cfl"],
-                          ff_fraction=tp["freefall_dt_fraction"], dt_max=cfg["p5"]["dt_max_myr"],
-                          jeans_NJ=cfg["hydro"]["jeans_floor_NJ"], cooling_params=dict(gp["cooling_params"]))
+    return CouplingParams(
+        a=AxionUnits(cfg["axion"]["m22"]).hbar_over_m,
+        G=G_CODE,
+        gamma=gp["gamma"],
+        mu=gp["mu"],
+        T0=gp["T_K"],
+        cooling_model=gp["cooling_model"],
+        limiter=cfg["hydro"]["limiter"],
+        cfl=tp["cfl_hydro"],
+        sp_kin_factor=tp["sp_kinetic_dt_factor"],
+        sp_phase_max=tp["sp_potential_phase_max_rad"],
+        tau=tau,
+        workers=cfg["compute"]["fft_workers"],
+        grav_cfl=tp["grav_cfl"],
+        ff_fraction=tp["freefall_dt_fraction"],
+        dt_max=cfg["p5"]["dt_max_myr"],
+        jeans_NJ=cfg["hydro"]["jeans_floor_NJ"],
+        cooling_params=dict(gp["cooling_params"]),
+        filter_kind=filter_kind_from_cfg(cfg),
+    )
 
 
 def gas_initial_condition(cfg: dict, grid: Grid3D, n_cm3: float) -> np.ndarray:
-    """Homogenes Gas + geseedetes weißes Rauschen auf ρ (Druck homogen), v = initial_velocity (isotrop 0)."""
     gp = cfg["gas"]
     if gp["initial_velocity_kms"] != 0.0:
-        raise NotImplementedError("nur ruhendes Gas implementiert")
+        raise NotImplementedError("only gas at rest is implemented")
     rng = np.random.default_rng(cfg["meta"]["seed"])
     rho0 = gas_mass_density(n_cm3, gp["mu"])
     rho = rho0 * (1.0 + gp["perturbation_rel_amplitude"] * rng.standard_normal(grid.shape))
@@ -42,17 +57,31 @@ def gas_initial_condition(cfg: dict, grid: Grid3D, n_cm3: float) -> np.ndarray:
     return hy.cons_from_prim(rho, z, z, z, p, gp["gamma"])
 
 
-# ------------------------------------------------------------ B4: Halo --
-def random_phase_halo(grid: Grid3D, mass: float, sigma_v: float, r_core: float, a: float, seed: int,
-                      workers: int) -> np.ndarray:
-    """Granularer Halo als Zufallsphasen-Wellenfeld (vgl. Lin et al. 2018; Yavetz et al. 2022):
-    ψ̂(k) ∝ exp(−a²k²/(4σ²))·(g₁ + i g₂)  ⇒  |ψ̂|² ∝ Maxwell-Verteilung f(v = a k);
-    ψ = √(ρ_env) χ/⟨|χ|²⟩^½ mit ρ_env ∝ 1/(1+(r/r_h)²); Masse exakt normiert.
-    Kein Gleichgewicht: wird vor der Kopplung per SP vorrelaxiert (setup.halo_relax_myr)."""
+def random_phase_halo(
+    grid: Grid3D,
+    mass: float,
+    sigma_v: float,
+    r_core: float,
+    a: float,
+    seed: int,
+    workers: int,
+    n_ref: int | None = None,
+) -> np.ndarray:
     import scipy.fft as sfft
+
     rng = np.random.default_rng(seed)
-    amp = np.exp(-(a**2) * grid.k2_full / (4.0 * sigma_v**2))
-    z = amp * (rng.standard_normal(grid.shape) + 1j * rng.standard_normal(grid.shape))
+    if n_ref is None:
+        n_ref = grid.n
+    if grid.n < n_ref:
+        raise ValueError(f"N={grid.n} < halo_ref_n={n_ref}")
+    gref = Grid3D(grid.box, n_ref)
+    amp = np.exp(-(a**2) * gref.k2_full / (4.0 * sigma_v**2))
+    zr = amp * (rng.standard_normal(gref.shape) + 1j * rng.standard_normal(gref.shape))
+    h = n_ref // 2
+    io = np.r_[0:h, n_ref - h + 1 : n_ref]
+    inew = np.r_[0:h, grid.n - h + 1 : grid.n]
+    z = np.zeros(grid.shape, dtype=np.complex128)
+    z[np.ix_(inew, inew, inew)] = zr[np.ix_(io, io, io)]
     chi = sfft.ifftn(z, workers=workers)
     chi /= np.sqrt(np.mean(np.abs(chi) ** 2))
     psi = np.sqrt(1.0 / (1.0 + (grid.r / r_core) ** 2)) * chi
@@ -60,9 +89,9 @@ def random_phase_halo(grid: Grid3D, mass: float, sigma_v: float, r_core: float, 
 
 
 def build_axion_field(cfg: dict, grid: Grid3D, workers: int):
-    """ψ(t=0) für Zweig A=1 gemäß cfg['setup']['kind']. Gibt (psi, info) zurück."""
     from .schroedinger import mass, potential, stable_dt, step_kdk
     from .soliton import embed_ground_state
+
     a = AxionUnits(cfg["axion"]["m22"]).hbar_over_m
     Ms = cfg["axion"]["soliton_mass_msun"]
     psi, _, ginfo = embed_ground_state(grid, Ms, a, G_CODE, polish_cfg(cfg), workers)
@@ -71,20 +100,63 @@ def build_axion_field(cfg: dict, grid: Grid3D, workers: int):
     if S["kind"] == "isolated":
         return psi, info
     if S["kind"] != "soliton_halo":
-        raise ValueError(f"unbekanntes setup.kind {S['kind']}")
-    halo = random_phase_halo(grid, S["halo_mass_ratio"] * Ms, S["halo_sigma_kms"] * KMS_TO_CODE,
-                             S["halo_core_kpc"], a, S["halo_seed"], workers)
+        raise ValueError(f"unknown setup.kind {S['kind']}")
+    halo = random_phase_halo(
+        grid,
+        S["halo_mass_ratio"] * Ms,
+        S["halo_sigma_kms"] * KMS_TO_CODE,
+        S["halo_core_kpc"],
+        a,
+        S["halo_seed"],
+        workers,
+        n_ref=S["halo_ref_n"],
+    )
     psi = psi + halo
     phi = potential(psi, None, grid, G_CODE, workers)
     tp, t, c = cfg["time"], 0.0, grid.center_index
     phic = [float(phi[c, c, c])]
     while t < S["halo_relax_myr"] - 1e-12:
-        dt = min(stable_dt(grid, phi, a, tp["sp_kinetic_dt_factor"], tp["sp_potential_phase_max_rad"]),
-                 S["halo_relax_myr"] - t)
+        dt = min(
+            stable_dt(grid, phi, a, tp["sp_kinetic_dt_factor"], tp["sp_potential_phase_max_rad"]),
+            S["halo_relax_myr"] - t,
+        )
         psi, phi = step_kdk(psi, phi, None, grid, dt, a, G_CODE, workers)
         t += dt
         phic.append(float(phi[c, c, c]))
-    info.update({"M_total": mass(psi, grid), "relax_myr": t,
-                 "phi_c_rel_std_relax": float(np.std(phic) / abs(np.mean(phic))),
-                 "t_dB_myr": a / (S["halo_sigma_kms"] * KMS_TO_CODE) ** 2})
+    info.update(
+        {
+            "M_total": mass(psi, grid),
+            "relax_myr": t,
+            "phi_c_rel_std_relax": float(np.std(phic) / abs(np.mean(phic))),
+            "t_dB_myr": a / (S["halo_sigma_kms"] * KMS_TO_CODE) ** 2,
+        }
+    )
     return psi, info
+
+
+def filter_kind_from_cfg(cfg: dict) -> str:
+    k = cfg["filter"]["kernel"]
+    from .filters import KERNELS
+
+    if k not in KERNELS:
+        raise ValueError(f"filter.kernel = {k!r}; allowed: {KERNELS}")
+    return k
+
+
+def fibonacci_probes(grid: Grid3D, radii_kpc: list, n_per_shell: int) -> tuple[np.ndarray, np.ndarray]:
+    out, rad = [], []
+    gold = np.pi * (3.0 - np.sqrt(5.0))
+    c = grid.center_index
+    for R in radii_kpc:
+        for i in range(n_per_shell):
+            zc = 1 - 2 * (i + 0.5) / n_per_shell
+            rc = np.sqrt(1 - zc * zc)
+            ph = gold * i
+            v = np.array([rc * np.cos(ph), rc * np.sin(ph), zc]) * R
+            idx = tuple(int(round(c + x / grid.dx)) % grid.n for x in v)
+            out.append(idx)
+            rad.append(R)
+    arr = np.array(out)
+    _, keep = np.unique(arr, axis=0, return_index=True)
+    keep = np.sort(keep)
+    return arr[keep], np.array(rad)[keep]

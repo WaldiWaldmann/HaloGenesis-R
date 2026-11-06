@@ -1,4 +1,3 @@
-"""Schnelle Regressionstests: Einheiten, analytische Profile, Config-Strenge."""
 import numpy as np
 import pytest
 import astropy.constants as const
@@ -26,9 +25,8 @@ def test_sound_speed_research_plan():
 
 
 def test_jeans_mass_density_scaling():
-    # Research Plan Gl. 16: M_J2/M_J1 = 50^(-1/2) bei gleicher Schallgeschwindigkeit
     cs = 0.003
-    assert np.isclose(jeans_mass(cs, 50.0) / jeans_mass(cs, 1.0), 50 ** -0.5, rtol=1e-14)
+    assert np.isclose(jeans_mass(cs, 50.0) / jeans_mass(cs, 1.0), 50**-0.5, rtol=1e-14)
 
 
 def test_schive_shape_integral_vs_quad():
@@ -49,6 +47,7 @@ def test_schive_mass_radius_roundtrip():
 def test_config_rejects_missing_key(tmp_path):
     import yaml
     from pathlib import Path
+
     cfg = yaml.safe_load(Path("configs/default.yaml").read_text(encoding="utf-8"))
     del cfg["gas"]["T_K"]
     p = tmp_path / "bad.yaml"

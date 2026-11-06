@@ -1,0 +1,13 @@
+runs/
+__pycache__/
+*.py[cod]
+*.nbi
+*.nbc
+.pytest_cache/
+.venv/
+venv/
+*.zip
+ergebnisse_*/
+.DS_Store
+.idea/
+.vscode/

@@ -1,4 +1,3 @@
-"""Regressionstests für P4/P5-Bausteine (Filter, Aperturen, Belegungsdauer, O3-Grenzen)."""
 import numpy as np
 
 from hgr import observables as ob
@@ -13,7 +12,6 @@ def test_aperture_volume():
 
 
 def test_flux_identity_for_uniform_translation():
-    # Gleichförmige Strömung: Netto-Fluss durch geschlossene Kugel = 0
     g = Grid3D(8.0, 32)
     w = ob.aperture_weights(g, 1.5)
     U = np.zeros((5,) + g.shape)
@@ -23,7 +21,7 @@ def test_flux_identity_for_uniform_translation():
 
 def test_occupancy_interpolates_crossings():
     t = np.array([0.0, 1.0, 2.0, 3.0])
-    q = np.exp(np.array([1.0, -1.0, -1.0, 1.0]))  # ln q kreuzt 0 bei t=0.5 und t=2.5
+    q = np.exp(np.array([1.0, -1.0, -1.0, 1.0]))
     frac, iv = ob.occupancy(t, q, 1.0)
     assert np.allclose(iv, [(0.5, 2.5)]) and np.isclose(frac, 2 / 3)
 

@@ -1,0 +1,15 @@
+runs:
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 0.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0,  setup: soliton_halo, filter: zero_lag_boxcar}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0,  setup: soliton_halo, filter: delay_half_tau}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 10.0, setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 10.0, setup: soliton_halo, filter: zero_lag_boxcar}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 10.0, setup: soliton_halo, filter: delay_half_tau}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 0.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo, filter: zero_lag_boxcar}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo, filter: delay_half_tau}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo, filter: zero_lag_boxcar}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo, filter: delay_half_tau}

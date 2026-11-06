@@ -1,4 +1,3 @@
-"""Exakter Riemann-Löser für ideales Gas (Toro 2009, Kap. 4) – nur als Validierungsreferenz."""
 from __future__ import annotations
 
 import numpy as np
@@ -7,10 +6,10 @@ from scipy.optimize import brentq
 
 def _fk(p, rk, pk, g):
     ck = np.sqrt(g * pk / rk)
-    if p > pk:  # Stoß
+    if p > pk:
         A, B = 2 / ((g + 1) * rk), (g - 1) / (g + 1) * pk
         return (p - pk) * np.sqrt(A / (p + B))
-    return 2 * ck / (g - 1) * ((p / pk) ** ((g - 1) / (2 * g)) - 1)  # Verdünnung
+    return 2 * ck / (g - 1) * ((p / pk) ** ((g - 1) / (2 * g)) - 1)
 
 
 def star_state(rL, uL, pL, rR, uR, pR, g):
@@ -21,13 +20,12 @@ def star_state(rL, uL, pL, rR, uR, pR, g):
 
 
 def sample(xi, rL, uL, pL, rR, uR, pR, g):
-    """Lösung bei ξ = (x − x0)/t. Gibt (ρ, u, p) als Arrays."""
     ps, us = star_state(rL, uL, pL, rR, uR, pR, g)
     xi = np.asarray(xi, dtype=float)
     rho, u, p = np.empty_like(xi), np.empty_like(xi), np.empty_like(xi)
     cL, cR = np.sqrt(g * pL / rL), np.sqrt(g * pR / rR)
     for i, s in enumerate(xi):
-        if s <= us:  # linke Seite
+        if s <= us:
             if ps > pL:
                 SL = uL - cL * np.sqrt((g + 1) / (2 * g) * ps / pL + (g - 1) / (2 * g))
                 if s <= SL:
@@ -46,7 +44,7 @@ def sample(xi, rL, uL, pL, rR, uR, pR, g):
                     rho[i] = rL * (c / cL) ** (2 / (g - 1))
                     u[i] = 2 / (g + 1) * (cL + (g - 1) / 2 * uL + s)
                     p[i] = pL * (c / cL) ** (2 * g / (g - 1))
-        else:  # rechte Seite
+        else:
             if ps > pR:
                 SR = uR + cR * np.sqrt((g + 1) / (2 * g) * ps / pR + (g - 1) / (2 * g))
                 if s >= SR:

@@ -1,4 +1,3 @@
-"""Optimierte Pfade müssen den Referenzpfaden entsprechen (bitgleich bzw. auf Rundungsniveau)."""
 import numpy as np
 import scipy.fft as sfft
 
@@ -13,8 +12,14 @@ from hgr.units import gas_mass_density
 def _random_state(n, seed=0):
     rng = np.random.default_rng(seed)
     rho = 1 + 0.4 * rng.random((n, n, n))
-    return hy.cons_from_prim(rho, 0.3 * rng.standard_normal((n, n, n)), 0.2 * rng.standard_normal((n, n, n)),
-                             0.1 * rng.standard_normal((n, n, n)), 1 + 0.3 * rng.random((n, n, n)), 5 / 3)
+    return hy.cons_from_prim(
+        rho,
+        0.3 * rng.standard_normal((n, n, n)),
+        0.2 * rng.standard_normal((n, n, n)),
+        0.1 * rng.standard_normal((n, n, n)),
+        1 + 0.3 * rng.random((n, n, n)),
+        5 / 3,
+    )
 
 
 def test_hydro_sweeps_bitwise_identical():
@@ -49,7 +54,7 @@ def test_kick_inplace_and_drift_cache():
     kick_inplace(b, phi, 0.3, 0.02)
     assert np.max(np.abs(a - b)) < 1e-12
     d1 = drift(psi.copy(), g, 0.5, 0.02, 1)
-    d2 = drift(psi.copy(), g, 0.5, 0.02, 1)  # aus dem Cache
+    d2 = drift(psi.copy(), g, 0.5, 0.02, 1)
     ref = sfft.ifftn(sfft.fftn(psi) * np.exp(-0.5j * 0.02 * 0.5 * g.k2_full))
     assert np.array_equal(d1, d2) and np.max(np.abs(d1 - ref)) < 1e-12
 
@@ -63,6 +68,7 @@ def test_center_value_from_spectrum():
 
 def test_phibar_at_arbitrary_point():
     from hgr.coupled import Branch, TrailingBoxcar
+
     n = 16
     g = Grid3D(4.0, n)
     f = np.random.default_rng(4).standard_normal((n, n, n))

@@ -1,4 +1,3 @@
-"""Schnelle Regressionstests für SP-Solver (P2) und Hydro/Kühlung (P3)."""
 import numpy as np
 
 from hgr import cooling as co

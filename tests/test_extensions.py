@@ -1,4 +1,3 @@
-"""Regressionstests B4–B7."""
 import copy
 
 import numpy as np
@@ -50,3 +49,12 @@ def test_seed_changes_gas_ic():
     c2 = copy.deepcopy(CFG)
     c2["meta"]["seed"] += 1
     assert not np.array_equal(gas_initial_condition(CFG, g, 1.0), gas_initial_condition(c2, g, 1.0))
+
+
+def test_halo_same_realization_for_all_N():
+    a = 0.0196
+    g1, g2 = Grid3D(8.0, 32), Grid3D(8.0, 64)
+    h1 = random_phase_halo(g1, 1e9, 0.03, 1.5, a, 7, 1, n_ref=32)
+    h2 = random_phase_halo(g2, 1e9, 0.03, 1.5, a, 7, 1, n_ref=32)
+    c = np.corrcoef(np.abs(h1).ravel(), np.abs(h2[::2, ::2, ::2]).ravel())[0, 1]
+    assert c > 0.999

@@ -1,9 +1,3 @@
-"""Periodisches, kubisches 3D-Gitter.
-
-Konvention: Gitterpunkte x_i = (i - N/2) dx,  i = 0..N-1,  also x in [-L/2, L/2).
-Der Ursprung liegt exakt auf dem Gitterpunkt i = N/2 (dort sitzt später das
-Soliton-Zentrum). Für die Finite-Volumen-Hydro (P3) sind dies die Zellmitten.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,16 +8,15 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Grid3D:
-    box: float  # Kantenlänge L [kpc]
-    n: int      # Punkte pro Achse
+    box: float
+    n: int
 
     def __post_init__(self) -> None:
         if not (np.isfinite(self.box) and self.box > 0):
-            raise ValueError(f"box muss > 0 sein, ist {self.box}")
+            raise ValueError(f"box must be > 0, got {self.box}")
         if self.n < 8 or self.n % 2 != 0:
-            raise ValueError(f"n muss gerade und >= 8 sein, ist {self.n}")
+            raise ValueError(f"n must be even and >= 8, got {self.n}")
 
-    # ---------------------------------------------------------- Ortsraum --
     @property
     def dx(self) -> float:
         return self.box / self.n
@@ -50,11 +43,9 @@ class Grid3D:
 
     @cached_property
     def r(self) -> np.ndarray:
-        """Abstand zum Ursprung (nicht-periodisch gemessen, Zentrum in Boxmitte)."""
         x, y, z = self.mesh_sparse
         return np.sqrt(x**2 + y**2 + z**2)
 
-    # -------------------------------------------------------- Fourierraum --
     @cached_property
     def k1d(self) -> np.ndarray:
         return 2.0 * np.pi * np.fft.fftfreq(self.n, d=self.dx)
@@ -65,7 +56,6 @@ class Grid3D:
 
     @cached_property
     def k_r(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Wellenvektoren passend zu rfftn (letzte Achse halbiert), sparse."""
         return tuple(np.meshgrid(self.k1d, self.k1d, self.k1d_r, indexing="ij", sparse=True))
 
     @cached_property
@@ -75,7 +65,6 @@ class Grid3D:
 
     @cached_property
     def k_full(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Wellenvektoren passend zu fftn (komplexe Felder, z. B. psi), sparse."""
         return tuple(np.meshgrid(self.k1d, self.k1d, self.k1d, indexing="ij", sparse=True))
 
     @cached_property
@@ -88,6 +77,5 @@ class Grid3D:
         return np.pi / self.dx
 
     def integrate(self, field: np.ndarray) -> float:
-        """Volumenintegral (Mittelpunktsregel = spektral exakt für periodische Felder)."""
         assert field.shape == self.shape, (field.shape, self.shape)
         return float(np.sum(field) * self.cell_volume)

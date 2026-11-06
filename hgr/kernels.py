@@ -1,13 +1,3 @@
-"""Performance-Kernels (Numba, parallel). Jeder Kernel ersetzt einen NumPy-Pfad mit
-identischer Arithmetik pro Zelle; Äquivalenz wird in tests/test_performance_equivalence.py geprüft.
-
-Tricks:
-  * Kühlung: Bisektion pro Zelle mit Frühabbruch (Intervall nicht mehr teilbar) und Überspringen
-    von Zellen ohne Kühlung (Rate 0 bei T_alt ⇒ exakt e_neu = e_alt, wie im NumPy-Pfad).
-  * Kick: ψ·(cos θ − i sin θ) in-place, ohne komplexe exp-Temporaries.
-  * Hydro x/y-Sweeps: Ebenen-Kernel auf strided Views (innere Schleife über die zusammenhängende
-    z-Achse) -> keine Transponier-Kopien mehr.
-"""
 from __future__ import annotations
 
 import math
@@ -16,8 +6,6 @@ import numpy as np
 from numba import njit, prange
 
 from .hydro import _hllc, _limit
-
-# ------------------------------------------------------------------ Kühlung --
 
 
 @njit(cache=True, inline="always")
@@ -60,19 +48,18 @@ def _rate(model, rho, T, n_fac, nH_fac, xH2, Tfloor, rate_to_code):
 
 @njit(cache=True, parallel=True)
 def cooling_backward_euler(rho, e_old, dt, model, tfac, e_lo_fac, n_fac, nH_fac, xH2, Tfloor, rate_to_code):
-    """Löst e + dt·R(e) = e_alt je Zelle (Rückwärts-Euler, Bisektion). Arrays 1D (ravel)."""
     out = np.empty_like(e_old)
     for i in prange(rho.size):
         r, eo = rho[i], e_old[i]
         if _rate(model, r, tfac * eo / r, n_fac, nH_fac, xH2, Tfloor, rate_to_code) == 0.0:
-            out[i] = eo  # identisch zum NumPy-Pfad: Bisektion würde auf e_alt konvergieren
+            out[i] = eo
             continue
         lo = min(e_lo_fac * r, eo)
         hi = eo
         for _ in range(64):
             mid = 0.5 * (lo + hi)
             if mid == lo or mid == hi:
-                break  # Intervall nicht weiter teilbar -> weitere Iterationen ändern nichts
+                break
             f = mid - eo + dt * _rate(model, r, tfac * mid / r, n_fac, nH_fac, xH2, Tfloor, rate_to_code)
             if f > 0:
                 hi = mid
@@ -82,24 +69,15 @@ def cooling_backward_euler(rho, e_old, dt, model, tfac, e_lo_fac, n_fac, nH_fac,
     return out
 
 
-# --------------------------------------------------------------------- Kick --
-
-
 @njit(cache=True, parallel=True)
 def kick_inplace(psi, phi, s):
-    """ψ ← ψ·exp(−i Φ s), s = dt/a. Arrays 1D (ravel-Views)."""
     for i in prange(psi.size):
         th = phi[i] * s
         psi[i] = psi[i] * complex(math.cos(th), -math.sin(th))
 
 
-# --------------------------------------------------------------- Hydro x/y --
-
-
 @njit(cache=True, parallel=True)
 def sweep_planes(V, nrm, dtdx, g, lim, first_order):
-    """V: (5, P, S, I) View; Sweep entlang Achse S, parallel über P, innere Schleife über I
-    (zusammenhängend). Arithmetik pro Zelle identisch zu hydro._sweep_rows."""
     P, S, I = V.shape[1], V.shape[2], V.shape[3]
     t1 = 1 if nrm != 1 else 2
     t2 = 3 if nrm != 3 else 2
@@ -118,8 +96,9 @@ def sweep_planes(V, nrm, dtdx, g, lim, first_order):
                 W[1, i, k] = V[nrm, p, i, k] / r
                 W[2, i, k] = V[t1, p, i, k] / r
                 W[3, i, k] = V[t2, p, i, k] / r
-                W[4, i, k] = (g - 1.0) * (V[4, p, i, k] - 0.5 * (V[1, p, i, k] ** 2 + V[2, p, i, k] ** 2
-                                                               + V[3, p, i, k] ** 2) / r)
+                W[4, i, k] = (g - 1.0) * (
+                    V[4, p, i, k] - 0.5 * (V[1, p, i, k] ** 2 + V[2, p, i, k] ** 2 + V[3, p, i, k] ** 2) / r
+                )
         for i in range(S):
             im = i - 1 if i > 0 else S - 1
             ip = i + 1 if i < S - 1 else 0
@@ -133,11 +112,16 @@ def sweep_planes(V, nrm, dtdx, g, lim, first_order):
                 dw = u * d[3]
                 dp = g * pp * d[1] + u * d[4]
                 h = 0.5 * dtdx
-                Lf[0, i, k] = r - 0.5 * d[0] - h * dr; Rf[0, i, k] = r + 0.5 * d[0] - h * dr
-                Lf[1, i, k] = u - 0.5 * d[1] - h * du; Rf[1, i, k] = u + 0.5 * d[1] - h * du
-                Lf[2, i, k] = v - 0.5 * d[2] - h * dv; Rf[2, i, k] = v + 0.5 * d[2] - h * dv
-                Lf[3, i, k] = w - 0.5 * d[3] - h * dw; Rf[3, i, k] = w + 0.5 * d[3] - h * dw
-                Lf[4, i, k] = pp - 0.5 * d[4] - h * dp; Rf[4, i, k] = pp + 0.5 * d[4] - h * dp
+                Lf[0, i, k] = r - 0.5 * d[0] - h * dr
+                Rf[0, i, k] = r + 0.5 * d[0] - h * dr
+                Lf[1, i, k] = u - 0.5 * d[1] - h * du
+                Rf[1, i, k] = u + 0.5 * d[1] - h * du
+                Lf[2, i, k] = v - 0.5 * d[2] - h * dv
+                Rf[2, i, k] = v + 0.5 * d[2] - h * dv
+                Lf[3, i, k] = w - 0.5 * d[3] - h * dw
+                Rf[3, i, k] = w + 0.5 * d[3] - h * dw
+                Lf[4, i, k] = pp - 0.5 * d[4] - h * dp
+                Rf[4, i, k] = pp + 0.5 * d[4] - h * dp
                 if Lf[0, i, k] <= 0.0 or Rf[0, i, k] <= 0.0 or Lf[4, i, k] <= 0.0 or Rf[4, i, k] <= 0.0:
                     for q in range(5):
                         Lf[q, i, k] = W[q, i, k]
@@ -146,9 +130,25 @@ def sweep_planes(V, nrm, dtdx, g, lim, first_order):
         for i in range(S):
             ip = i + 1 if i < S - 1 else 0
             for k in range(I):
-                _hllc(Rf[0, i, k], Rf[1, i, k], Rf[2, i, k], Rf[3, i, k], Rf[4, i, k],
-                      Lf[0, ip, k], Lf[1, ip, k], Lf[2, ip, k], Lf[3, ip, k], Lf[4, ip, k], g, f)
-                F[0, i, k] = f[0]; F[nrm, i, k] = f[1]; F[t1, i, k] = f[2]; F[t2, i, k] = f[3]; F[4, i, k] = f[4]
+                _hllc(
+                    Rf[0, i, k],
+                    Rf[1, i, k],
+                    Rf[2, i, k],
+                    Rf[3, i, k],
+                    Rf[4, i, k],
+                    Lf[0, ip, k],
+                    Lf[1, ip, k],
+                    Lf[2, ip, k],
+                    Lf[3, ip, k],
+                    Lf[4, ip, k],
+                    g,
+                    f,
+                )
+                F[0, i, k] = f[0]
+                F[nrm, i, k] = f[1]
+                F[t1, i, k] = f[2]
+                F[t2, i, k] = f[3]
+                F[4, i, k] = f[4]
         for i in range(S):
             im = i - 1 if i > 0 else S - 1
             for k in range(I):
@@ -157,11 +157,7 @@ def sweep_planes(V, nrm, dtdx, g, lim, first_order):
     return fallbacks.sum()
 
 
-# ------------------------------------------------- Spektraler Punktwert --
-
 def center_weights_rfft(n: int) -> np.ndarray:
-    """Gewichte w, sodass f(x_c) = Re Σ ĥ·w / N³ für rfftn-Spektrum ĥ, x_c = Gitterpunkt N/2.
-    Phase am Zentrum: (−1)^(ix+iy+iz); innere kz-Moden doppelt (Hermitesche Symmetrie)."""
     ix = np.arange(n)
     iz = np.arange(n // 2 + 1)
     s = ((-1.0) ** ix)[:, None, None] * ((-1.0) ** ix)[None, :, None] * ((-1.0) ** iz)[None, None, :]

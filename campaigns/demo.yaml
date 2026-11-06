@@ -1,9 +1,9 @@
-# Pipeline-Test (Minuten, NICHT für Aussagen)
+# Pipeline smoke test (own label HGR-demo, never mixed with production runs)
 runs:
-  - {config: configs/physical_fb.yaml, N: 32, tau: 3.0, t_end: 6.0}
-  - {config: configs/physical_fb.yaml, N: 48, tau: 3.0, t_end: 6.0}
-  - {config: configs/physical_fb.yaml, N: 64, tau: 3.0, t_end: 6.0}
-  - {config: configs/physical_fb.yaml, N: 64, tau: 3.0, t_end: 6.0, dt_max: 0.125}
-  - {config: configs/physical_fb.yaml, N: 32, tau: 10.0, t_end: 6.0}
-  - {config: configs/physical_fb.yaml, N: 32, tau: 3.0, t_end: 6.0, seed: 11}
-  - {config: configs/physical_fb.yaml, N: 48, tau: 3.0, t_end: 10.0, setup: soliton_halo}
+  - {config: configs/demo.yaml, N: 32, tau: 3.0, t_end: 6.0}
+  - {config: configs/demo.yaml, N: 48, tau: 3.0, t_end: 6.0}
+  - {config: configs/demo.yaml, N: 64, tau: 3.0, t_end: 6.0}
+  - {config: configs/demo.yaml, N: 64, tau: 3.0, t_end: 6.0, dt_max: 0.125}
+  - {config: configs/demo.yaml, N: 32, tau: 10.0, t_end: 6.0}
+  - {config: configs/demo.yaml, N: 32, tau: 3.0, t_end: 6.0, seed: 11}
+  - {config: configs/demo.yaml, N: 48, tau: 3.0, t_end: 10.0, setup: soliton_halo}

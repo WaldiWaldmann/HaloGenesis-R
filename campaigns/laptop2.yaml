@@ -1,16 +1,11 @@
-# Laptop 2 – physikalischer Lauf (n = 0,27 cm⁻³), v0.9 bereinigt.
 runs:
-  # Auflösungsreihe (Basis) + Zeitverfeinerung (Research Plan §13.3)
   - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0}
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0}
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0, dt_max: 0.125}
-  # Nulltest Filter (isoliert: Φ̄ = Φ) und Stichprobenfehler
   - {config: configs/physical_fb.yaml, N: 128, tau: 10.0}
   - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0, seed: 11}
-  # Kühlung entkoppelt (nur Kühlung geändert, sonst Basis)
   - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0, cooling: primordial_h2}
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0, cooling: primordial_h2}
-  # n-Scan
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0, n_cm3: 0.01}
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0, n_cm3: 0.1}
   - {config: configs/physical_fb.yaml, N: 128, tau: 3.0, n_cm3: 1.0}

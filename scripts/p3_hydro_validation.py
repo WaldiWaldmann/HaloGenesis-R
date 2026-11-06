@@ -1,13 +1,3 @@
-"""P3 – Hydrodynamik (MUSCL-Hancock/HLLC), Gravitationsquellterm, Kühlung.
-
-H1  Sod-Stoßrohr entlang x, y, z gegen exakten Riemann-Löser; L1-Konvergenz
-H2  Erhaltung von Masse, Impuls, Energie (periodisch, ohne Quellen) bis Rundung
-H3  Lineare Jeans-Dispersion ω² = c_s²k² − 4πGρ₀ mit Selbstgravitation (Research Plan Gl. 13)
-H4  Hydrostatisches Gas im Soliton-Potential: Rauschboden künstlicher Strömungen (relevant für O3)
-H5  Kühlung: implizite Integration gegen Referenz-ODE; Kühlzeit-Karte des historischen Modells
-
-Aufruf: python -m scripts.p3_hydro_validation --config configs/default.yaml
-"""
 from __future__ import annotations
 
 import argparse
@@ -31,7 +21,6 @@ from hgr.units import G_CODE, KMS_TO_CODE, AxionUnits, gas_mass_density
 R = Recorder()
 
 
-# ------------------------------------------------------------------ H1 ----
 def _sod(N, axis, t_end, cfl, lim, snaps=None):
     g = 1.4
     x = (np.arange(N) + 0.5) / N
@@ -66,37 +55,83 @@ def h1_sod(cfg, figs, figs3, dpi):
             x, r, u, p, _ = _sod(N, ax, t_end, V["sod_cfl"], lim)
             sel = (x > 0.25) & (x < 0.75)
             re, ue, pe = sample((x[sel] - 0.5) / t_end, 1, 0, 1, 0.125, 0, 0.1, 1.4)
-            e_ax.append(np.mean(np.abs(r[sel] - re)) * 0.5)  # L1 über Länge 0.5
+            e_ax.append(np.mean(np.abs(r[sel] - re)) * 0.5)
         errs.append(e_ax)
         R.add("H1", f"L1(ρ) N={N} (x/y/z max)", max(e_ax))
-        R.add("H1", f"Achsen-Asymmetrie N={N}", max(e_ax) - min(e_ax), 1e-14, max(e_ax) - min(e_ax) < 1e-14,
-              note="Split-Schema muss richtungsunabhängig sein")
+        R.add(
+            "H1",
+            f"axis asymmetry N={N}",
+            max(e_ax) - min(e_ax),
+            1e-14,
+            max(e_ax) - min(e_ax) < 1e-14,
+            note="split scheme must be direction-independent",
+        )
     errs = np.array(errs)[:, 0]
     i400 = V["sod_N"].index(400)
-    R.add("H1", "L1(ρ) bei N=400", errs[i400], V["sod_l1_max_at_400"], errs[i400] < V["sod_l1_max_at_400"])
+    R.add("H1", "L1(ρ) at N=400", errs[i400], V["sod_l1_max_at_400"], errs[i400] < V["sod_l1_max_at_400"])
     p_obs = np.log2(errs[-2] / errs[-1])
-    R.add("H1", "beobachtete Ordnung L1 (letzte Verdopplung)", p_obs, V["sod_order_min"], p_obs > V["sod_order_min"],
-          note="Stoß/Kontakt begrenzen auf ~1")
+    R.add(
+        "H1",
+        "observed order L1 (last doubling)",
+        p_obs,
+        V["sod_order_min"],
+        p_obs > V["sod_order_min"],
+        note="shock/contact limit to ~1",
+    )
     N = 400
     x, r, u, p, hist = _sod(N, 0, t_end, V["sod_cfl"], lim, snaps=True)
     re, ue, pe = sample((x - 0.5) / t_end, 1, 0, 1, 0.125, 0, 0.1, 1.4)
     for name, num, ex in [("rho", r, re), ("u", u, ue), ("p", p, pe)]:
-        viz.line_plot(figs / f"p3_H1_sod_{name}.png", x, {f"{name} numerisch (N={N})": num, f"{name} exakt": ex},
-                      xlabel="x", ylabel=name, title=f"H1: Sod t={t_end}", dpi=dpi)
-    viz.line_plot(figs / "p3_H1_sod_convergence.png", np.array(V["sod_N"], float),
-                  {"L1(ρ)": errs, "∝ 1/N": errs[0] * V["sod_N"][0] / np.array(V["sod_N"], float)},
-                  xlabel="N", ylabel="L1-Fehler", title="H1: Konvergenz Sod", dpi=dpi, logx=True, logy=True, markers=True)
+        viz.line_plot(
+            figs / f"p3_H1_sod_{name}.png",
+            x,
+            {f"{name} numerical (N={N})": num, f"{name} exact": ex},
+            xlabel="x",
+            ylabel=name,
+            title=f"H1: Sod t={t_end}",
+            dpi=dpi,
+        )
+    viz.line_plot(
+        figs / "p3_H1_sod_convergence.png",
+        np.array(V["sod_N"], float),
+        {"L1(ρ)": errs, "∝ 1/N": errs[0] * V["sod_N"][0] / np.array(V["sod_N"], float)},
+        xlabel="N",
+        ylabel="L1-error",
+        title="H1: convergence Sod",
+        dpi=dpi,
+        logx=True,
+        logy=True,
+        markers=True,
+    )
     ts = np.array([h[0] for h in hist])
     Z = np.array([h[1] for h in hist])
-    viz.heatmap(figs / "p3_H1_sod_spacetime.png", x, ts, Z, xlabel="x", ylabel="t", zlabel="ρ",
-                title="H1: Raum-Zeit-Diagramm ρ(x,t)", dpi=dpi)
-    viz.surface3d_png(figs3 / "p3_H1_sod_surface.png", x[::2], ts, Z[:, ::2], xlabel="x", ylabel="t", zlabel="ρ",
-                      title="H1: ρ(x, t)", dpi=dpi)
-    viz.surface3d_html(figs3 / "p3_H1_sod_surface.html", x[::2], ts, Z[:, ::2], xlabel="x", ylabel="t",
-                       zlabel="ρ", title="H1: ρ(x, t)")
+    viz.heatmap(
+        figs / "p3_H1_sod_spacetime.png",
+        x,
+        ts,
+        Z,
+        xlabel="x",
+        ylabel="t",
+        zlabel="ρ",
+        title="H1: space-time diagram ρ(x,t)",
+        dpi=dpi,
+    )
+    viz.surface3d_png(
+        figs3 / "p3_H1_sod_surface.png",
+        x[::2],
+        ts,
+        Z[:, ::2],
+        xlabel="x",
+        ylabel="t",
+        zlabel="ρ",
+        title="H1: ρ(x, t)",
+        dpi=dpi,
+    )
+    viz.surface3d_html(
+        figs3 / "p3_H1_sod_surface.html", x[::2], ts, Z[:, ::2], xlabel="x", ylabel="t", zlabel="ρ", title="H1: ρ(x, t)"
+    )
 
 
-# ------------------------------------------------------------------ H2 ----
 def h2_conservation(cfg, figs, figs3, dpi):
     V = cfg["validation_p3"]
     N = V["conservation_N"]
@@ -104,26 +139,38 @@ def h2_conservation(cfg, figs, figs3, dpi):
     x, y, z = g.mesh_sparse
     k = 2 * np.pi
     rho = 1 + 0.3 * np.sin(k * x) * np.cos(2 * k * y) + 0.2 * np.cos(k * z)
-    U = hy.cons_from_prim(rho, 0.3 * np.sin(k * y), 0.2 * np.cos(k * z) * np.sin(k * x), 0.1 * np.sin(2 * k * x),
-                          1 + 0.2 * np.cos(k * (x + y + z)), 5 / 3)
+    U = hy.cons_from_prim(
+        rho,
+        0.3 * np.sin(k * y),
+        0.2 * np.cos(k * z) * np.sin(k * x),
+        0.1 * np.sin(2 * k * x),
+        1 + 0.2 * np.cos(k * (x + y + z)),
+        5 / 3,
+    )
     T0 = hy.totals(U, g.cell_volume)
     nfb = 0
     for s in range(V["conservation_steps"]):
         nfb += hy.step(U, hy.cfl_dt(U, g.dx, 5 / 3, 0.4), g.dx, 5 / 3, cfg["hydro"]["limiter"], s)
     T1 = hy.totals(U, g.cell_volume)
-    names = ["Masse", "Impuls x", "Impuls y", "Impuls z", "Energie"]
-    scale = np.array([T0[0], T0[0], T0[0], T0[0], T0[4]])  # Impuls relativ zur Masse (×1 Geschw.-Einheit)
+    names = ["mass", "momentum x", "momentum y", "momentum z", "energy"]
+    scale = np.array([T0[0], T0[0], T0[0], T0[0], T0[4]])
     rel = np.abs(T1 - T0) / scale
     for n, r_ in zip(names, rel):
-        R.add("H2", f"rel. Änderung {n}", r_, V["conservation_rel_max"], r_ < V["conservation_rel_max"])
-    R.add("H2", "lokale Rückfälle auf 1. Ordnung", nfb)
-    viz.bar_log(figs / "p3_H2_conservation.png", names, [max(v, 1e-18) for v in rel], ylabel="relative Änderung",
-                title=f"H2: Erhaltung nach {V['conservation_steps']} Schritten", dpi=dpi)
-    viz.ortho_slices_3d_png(figs3 / "p3_H2_rho_end_ortho.png", U[0], 1.0, title="H2: ρ am Ende", dpi=dpi,
-                            log=False, label="ρ")
+        R.add("H2", f"rel. change {n}", r_, V["conservation_rel_max"], r_ < V["conservation_rel_max"])
+    R.add("H2", "local first-order fallbacks", nfb)
+    viz.bar_log(
+        figs / "p3_H2_conservation.png",
+        names,
+        [max(v, 1e-18) for v in rel],
+        ylabel="relative change",
+        title=f"H2: conservation after {V['conservation_steps']} steps",
+        dpi=dpi,
+    )
+    viz.ortho_slices_3d_png(
+        figs3 / "p3_H2_rho_end_ortho.png", U[0], 1.0, title="H2: ρ at end", dpi=dpi, log=False, label="ρ"
+    )
 
 
-# ------------------------------------------------------------------ H3 ----
 def _self_gravity_accel(U, g, G, workers):
     phi = solve_poisson_periodic(U[0], g, G, workers)
     return tuple(-d for d in gradient_spectral(phi, g, workers))
@@ -162,48 +209,80 @@ def h3_jeans(cfg, figs, figs3, dpi, workers):
             prof.append(line)
         ts, amps = np.array(ts), np.array(amps) / A
         if w2 > 0:
-            fit = minimize_scalar(lambda w: np.sum((amps - np.cos(w * ts)) ** 2),
-                                  bounds=(0.5 * np.sqrt(w2), 1.5 * np.sqrt(w2)), method="bounded")
+            fit = minimize_scalar(
+                lambda w: np.sum((amps - np.cos(w * ts)) ** 2),
+                bounds=(0.5 * np.sqrt(w2), 1.5 * np.sqrt(w2)),
+                method="bounded",
+            )
             wn2 = fit.x**2
             ana = np.cos(np.sqrt(w2) * ts)
-            label = "stabil (Oszillation)"
+            label = "stable (oscillation)"
         else:
-            fit = minimize_scalar(lambda q: np.sum((np.log(np.abs(amps)) - np.log(np.cosh(q * ts))) ** 2),
-                                  bounds=(0.5 * np.sqrt(-w2), 1.5 * np.sqrt(-w2)), method="bounded")
+            fit = minimize_scalar(
+                lambda q: np.sum((np.log(np.abs(amps)) - np.log(np.cosh(q * ts))) ** 2),
+                bounds=(0.5 * np.sqrt(-w2), 1.5 * np.sqrt(-w2)),
+                method="bounded",
+            )
             wn2 = -fit.x**2
             ana = np.cosh(np.sqrt(-w2) * ts)
-            label = "instabil (Wachstum)"
+            label = "unstable (growth)"
         rel = abs(wn2 / w2 - 1)
-        R.add("H3", f"Mode {m} (k/k_J={m/V['jeans_kJ_modes']:.2f}) rel. Fehler ω²", rel, V["jeans_rel_err_max"],
-              rel < V["jeans_rel_err_max"], note=label)
+        R.add(
+            "H3",
+            f"Mode {m} (k/k_J={m/V['jeans_kJ_modes']:.2f}) rel. error ω²",
+            rel,
+            V["jeans_rel_err_max"],
+            rel < V["jeans_rel_err_max"],
+            note=label,
+        )
         k2s.append(k**2), w2_num.append(wn2), w2_ana.append(w2)
-        viz.line_plot(figs / f"p3_H3_jeans_mode{m}.png", ts, {"numerisch": amps, "linear exakt": ana},
-                      xlabel="t (Code)", ylabel="δρ̂_k(t)/δρ̂_k(0)", title=f"H3: Jeans-Mode {m} – {label}", dpi=dpi)
+        viz.line_plot(
+            figs / f"p3_H3_jeans_mode{m}.png",
+            ts,
+            {"numerical": amps, "linear exact": ana},
+            xlabel="t (code)",
+            ylabel="δρ̂_k(t)/δρ̂_k(0)",
+            title=f"H3: Jeans mode {m} – {label}",
+            dpi=dpi,
+        )
         P = np.array(prof)
         stride = max(1, len(ts) // 80)
-        viz.surface3d_png(figs3 / f"p3_H3_jeans_mode{m}_surface.png", g.x1d, ts[::stride], P[::stride],
-                          xlabel="x", ylabel="t", zlabel="δρ/ρ₀", title=f"H3: δρ(x,t), Mode {m}", dpi=dpi)
+        viz.surface3d_png(
+            figs3 / f"p3_H3_jeans_mode{m}_surface.png",
+            g.x1d,
+            ts[::stride],
+            P[::stride],
+            xlabel="x",
+            ylabel="t",
+            zlabel="δρ/ρ₀",
+            title=f"H3: δρ(x,t), Mode {m}",
+            dpi=dpi,
+        )
     kk = np.linspace(0, max(k2s) * 1.1, 200)
     import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots()
-    ax.plot(kk, cs**2 * kk - 4 * np.pi * G * rho0, label="exakt")
-    ax.plot(k2s, w2_num, "o", label="numerisch")
+    ax.plot(kk, cs**2 * kk - 4 * np.pi * G * rho0, label="exact")
+    ax.plot(k2s, w2_num, "o", label="numerical")
     ax.axhline(0, color="k", lw=0.8)
-    ax.set_xlabel("k²"), ax.set_ylabel("ω²"), ax.set_title("H3: Jeans-Dispersion"), ax.legend()
+    ax.set_xlabel("k²"), ax.set_ylabel("ω²"), ax.set_title("H3: Jeans dispersion"), ax.legend()
     fig.savefig(figs / "p3_H3_dispersion.png", dpi=dpi, bbox_inches="tight")
     plt.close(fig)
 
 
-# ------------------------------------------------------------------ H4 ----
 def h4_hydrostatic(cfg, figs, figs3, dpi, workers):
     V = cfg["validation_p3"]
     L = cfg["domain"]["box_kpc"]
     g = Grid3D(L, V["hydrostatic_N"])
     a = AxionUnits(cfg["axion"]["m22"]).hbar_over_m
     sp = cfg["sp"]
-    pol = {"coarse_n": sp["polish_coarse_n"], "coarse_steps": sp["polish_coarse_steps"],
-           "coarse_dtau_T0": sp["polish_coarse_dtau_T0"], "fine_steps": sp["polish_fine_steps"],
-           "fine_dtau_T0": sp["polish_fine_dtau_T0"]}
+    pol = {
+        "coarse_n": sp["polish_coarse_n"],
+        "coarse_steps": sp["polish_coarse_steps"],
+        "coarse_dtau_T0": sp["polish_coarse_dtau_T0"],
+        "fine_steps": sp["polish_fine_steps"],
+        "fine_dtau_T0": sp["polish_fine_dtau_T0"],
+    }
     _, phi, _ = embed_ground_state(g, cfg["axion"]["soliton_mass_msun"], a, G_CODE, pol, workers)
     acc = tuple(-d for d in gradient_spectral(phi, g, workers))
     cs2 = (phi.max() - phi.min()) / V["hydrostatic_log_contrast"]
@@ -225,24 +304,49 @@ def h4_hydrostatic(cfg, figs, figs3, dpi, workers):
         s += 1
         vmag = np.sqrt(np.sum(hy.velocity(U) ** 2, axis=0))
         ts.append(t), vmax.append(vmag.max() / np.sqrt(cs2)), dcen.append(U[0][c, c, c] / r00 - 1)
-    R.add("H4", "Testtemperatur (isotherm) [K]", T_iso, note="aus vorgegebenem Dichtekontrast")
-    R.add("H4", "max |v|/c_s nach t_end", vmax[-1], V["hydrostatic_vmax_over_cs_max"],
-          vmax[-1] < V["hydrostatic_vmax_over_cs_max"], note="künstliche Strömung = Rauschboden für O3")
+    R.add("H4", "test temperature (isothermal) [K]", T_iso, note="from prescribed density contrast")
+    R.add(
+        "H4",
+        "max |v|/c_s after t_end",
+        vmax[-1],
+        V["hydrostatic_vmax_over_cs_max"],
+        vmax[-1] < V["hydrostatic_vmax_over_cs_max"],
+        note="spurious flow = noise floor for O3",
+    )
     R.add("H4", "max |v| [km/s]", vmax[-1] * np.sqrt(cs2) / KMS_TO_CODE)
-    R.add("H4", "rel. Änderung ρ(0)", dcen[-1])
-    viz.line_plot(figs / "p3_H4_noise.png", np.array(ts), {"max|v|/c_s": np.array(vmax) + 1e-18,
-                  "|Δρ(0)|/ρ(0)": np.abs(np.array(dcen)) + 1e-18}, xlabel="t [Myr]", ylabel="relativ",
-                  title=f"H4: Gleichgewichtserhalt im Soliton-Potential (N={g.n})", dpi=dpi, logy=True)
+    R.add("H4", "rel. change ρ(0)", dcen[-1])
+    viz.line_plot(
+        figs / "p3_H4_noise.png",
+        np.array(ts),
+        {"max|v|/c_s": np.array(vmax) + 1e-18, "|Δρ(0)|/ρ(0)": np.abs(np.array(dcen)) + 1e-18},
+        xlabel="t [Myr]",
+        ylabel="relative",
+        title=f"H4: equilibrium preservation on the soliton-potential (N={g.n})",
+        dpi=dpi,
+        logy=True,
+    )
     vfield = np.sqrt(np.sum(hy.velocity(U) ** 2, axis=0)) / np.sqrt(cs2)
-    viz.slices_row(figs / "p3_H4_slices.png", [(U[0], "ρ_b", "log"), (vfield, "|v|/c_s", "lin"),
-                   (U[0] / rho - 1, "Δρ/ρ", "sym")], L, dpi=dpi, suptitle="H4: hydrostatisches Gas, Endzustand")
-    viz.ortho_slices_3d_png(figs3 / "p3_H4_vel_ortho.png", vfield, L, title="H4: |v|/c_s (Rauschboden)", dpi=dpi,
-                            log=False, label="|v|/c_s")
-    viz.isosurface_html(figs3 / "p3_H4_rho_iso.html", U[0], L, title="H4: ρ_b im Soliton-Potential", log=True,
-                        label="ρ_b", max_points=cfg["viz"]["iso_max_points_per_axis"])
+    viz.slices_row(
+        figs / "p3_H4_slices.png",
+        [(U[0], "ρ_b", "log"), (vfield, "|v|/c_s", "lin"), (U[0] / rho - 1, "Δρ/ρ", "sym")],
+        L,
+        dpi=dpi,
+        suptitle="H4: hydrostatic gas, final state",
+    )
+    viz.ortho_slices_3d_png(
+        figs3 / "p3_H4_vel_ortho.png", vfield, L, title="H4: |v|/c_s (noise floor)", dpi=dpi, log=False, label="|v|/c_s"
+    )
+    viz.isosurface_html(
+        figs3 / "p3_H4_rho_iso.html",
+        U[0],
+        L,
+        title="H4: ρ_b on the soliton-potential",
+        log=True,
+        label="ρ_b",
+        max_points=cfg["viz"]["iso_max_points_per_axis"],
+    )
 
 
-# ------------------------------------------------------------------ H5 ----
 def h5_cooling(cfg, figs, figs3, dpi):
     V = cfg["validation_p3"]
     gp = cfg["gas"]
@@ -252,30 +356,41 @@ def h5_cooling(cfg, figs, figs3, dpi):
         U = hy.cons_from_prim(rho, 0, 0, 0, co.pressure_from_T(rho, T0, mu), gam)
         co.apply_cooling(U, V["cooling_dt_myr"], "piecewise_historical", gam, mu, None)
         T_be = co.temperature(U, gam, mu)[0, 0, 0]
-        # Referenz: dT/dt = −(γ−1) n²Λ μ m_H /(ρ k_B) über dieselbe Zeit, Stop bei T=300 K (Λ springt auf 0)
         r1 = rho[0, 0, 0]
         e_of_T = lambda T: co.pressure_from_T(r1, T, mu) / (gam - 1)  # noqa: E731
         rate = lambda T: co.number_density_cm3(r1, mu) ** 2 * co.lambda_historical(T) * co._RATE_TO_CODE  # noqa: E731
         dedT = e_of_T(1.0)
         ev = lambda t, y: y[0] - 300.0  # noqa: E731
         ev.terminal = True
-        sol = solve_ivp(lambda t, y: [-rate(y[0]) / dedT], (0, V["cooling_dt_myr"]), [T0], method="LSODA",
-                        rtol=1e-12, atol=1e-10, events=ev)
+        sol = solve_ivp(
+            lambda t, y: [-rate(y[0]) / dedT],
+            (0, V["cooling_dt_myr"]),
+            [T0],
+            method="LSODA",
+            rtol=1e-12,
+            atol=1e-10,
+            events=ev,
+        )
         T_ref = 300.0 if sol.t_events[0].size else sol.y[0, -1]
         rel = abs(T_be / T_ref - 1)
         tc = float(co.cooling_time_myr(np.array(r1), np.array(T0), mu, gam))
-        R.add("H5", f"n={n}: T nach {V['cooling_dt_myr']} Myr (implizit) [K]", T_be)
-        R.add("H5", f"n={n}: rel. Abweichung zur Referenz-ODE", rel, V["cooling_rel_err_max"],
-              rel < V["cooling_rel_err_max"])
-        R.add("H5", f"n={n}: Kühlzeit bei T0={T0:g} K [s]", tc * 3.15576e13, note="historisches Λ")
-    # Nicht-steifer Fall (T > 1e4 K, n = 1e-3): Rückwärts-Euler muss mit Ordnung 1 konvergieren
+        R.add("H5", f"n={n}: T after {V['cooling_dt_myr']} Myr (implicit) [K]", T_be)
+        R.add(
+            "H5",
+            f"n={n}: rel. deviation from reference ODE",
+            rel,
+            V["cooling_rel_err_max"],
+            rel < V["cooling_rel_err_max"],
+        )
+        R.add("H5", f"n={n}: cooling time at T0={T0:g} K [s]", tc * 3.15576e13, note="historisches Λ")
     r1 = gas_mass_density(1e-3, mu)
     T_hot = 1e5
     t_tot = 0.5 * float(co.cooling_time_myr(np.array(r1), np.array(T_hot), mu, gam))
     dedT = co.pressure_from_T(r1, 1.0, mu) / (gam - 1)
     rate = lambda T: co.number_density_cm3(r1, mu) ** 2 * co.lambda_historical(T) * co._RATE_TO_CODE  # noqa: E731
-    ref = solve_ivp(lambda t, y: [-rate(y[0]) / dedT], (0, t_tot), [T_hot], method="LSODA", rtol=1e-12,
-                    atol=1e-8).y[0, -1]
+    ref = solve_ivp(lambda t, y: [-rate(y[0]) / dedT], (0, t_tot), [T_hot], method="LSODA", rtol=1e-12, atol=1e-8).y[
+        0, -1
+    ]
     nsubs, errs = [1, 4, 16, 64, 256], []
     for ns_ in nsubs:
         rho = np.full((2, 2, 2), r1)
@@ -284,26 +399,81 @@ def h5_cooling(cfg, figs, figs3, dpi):
             co.apply_cooling(U, t_tot / ns_, "piecewise_historical", gam, mu, None)
         errs.append(abs(co.temperature(U, gam, mu)[0, 0, 0] / ref - 1))
     p_be = np.log(errs[-2] / errs[-1]) / np.log(4)
-    R.add("H5", "Rückwärts-Euler Ordnung (nicht-steif, T=1e5 K)", p_be, 1.0, abs(p_be - 1) < 0.15,
-          note=f"T_ref = {ref:.0f} K nach t = {t_tot:.3g} Myr")
-    viz.line_plot(figs / "p3_H5_be_convergence.png", np.array(nsubs, float), {"rel. Fehler T": np.array(errs),
-                  "∝ 1/n_sub": errs[0] / np.array(nsubs, float)}, xlabel="Teilschritte", ylabel="|T/T_ref − 1|",
-                  title="H5: Konvergenz der impliziten Kühlung", dpi=dpi, logx=True, logy=True, markers=True)
+    R.add(
+        "H5",
+        "backward-Euler order (non-stiff, T=1e5 K)",
+        p_be,
+        1.0,
+        abs(p_be - 1) < 0.15,
+        note=f"T_ref = {ref:.0f} K after t = {t_tot:.3g} Myr",
+    )
+    viz.line_plot(
+        figs / "p3_H5_be_convergence.png",
+        np.array(nsubs, float),
+        {"rel. error T": np.array(errs), "∝ 1/n_sub": errs[0] / np.array(nsubs, float)},
+        xlabel="substeps",
+        ylabel="|T/T_ref − 1|",
+        title="H5: convergence of implicit cooling",
+        dpi=dpi,
+        logx=True,
+        logy=True,
+        markers=True,
+    )
     ns = np.geomspace(1e-3, 1e2, 60)
     Ts = np.geomspace(310, 1e5, 60)
-    TC = np.array([[float(co.cooling_time_myr(np.array(gas_mass_density(n, mu)), np.array(T), mu, gam))
-                    for n in ns] for T in Ts])
-    viz.heatmap(figs / "p3_H5_tcool_map.png", ns, Ts, TC, xlabel="n [cm⁻³]", ylabel="T [K]", zlabel="t_cool [Myr]",
-                title="H5: Kühlzeit des HISTORISCHEN Modells", dpi=dpi, logx=True, logy=True, logz=True,
-                contour_levels=[1e-9, 1e-3, 1.0])
-    viz.surface3d_png(figs3 / "p3_H5_tcool_surface.png", ns, Ts, TC, xlabel="n [cm⁻³]", ylabel="T [K]",
-                      zlabel="t_cool [Myr]", title="H5: t_cool(n, T) historisch", dpi=dpi, log_axes=(True, True, True))
-    viz.surface3d_html(figs3 / "p3_H5_tcool_surface.html", ns, Ts, TC, xlabel="n [cm⁻³]", ylabel="T [K]",
-                       zlabel="t_cool [Myr]", title="H5: t_cool(n, T) historisch", log_axes=(True, True, True))
+    TC = np.array(
+        [[float(co.cooling_time_myr(np.array(gas_mass_density(n, mu)), np.array(T), mu, gam)) for n in ns] for T in Ts]
+    )
+    viz.heatmap(
+        figs / "p3_H5_tcool_map.png",
+        ns,
+        Ts,
+        TC,
+        xlabel="n [cm⁻³]",
+        ylabel="T [K]",
+        zlabel="t_cool [Myr]",
+        title="H5: cooling time of the HISTORICAL model",
+        dpi=dpi,
+        logx=True,
+        logy=True,
+        logz=True,
+        contour_levels=[1e-9, 1e-3, 1.0],
+    )
+    viz.surface3d_png(
+        figs3 / "p3_H5_tcool_surface.png",
+        ns,
+        Ts,
+        TC,
+        xlabel="n [cm⁻³]",
+        ylabel="T [K]",
+        zlabel="t_cool [Myr]",
+        title="H5: t_cool(n, T) historical",
+        dpi=dpi,
+        log_axes=(True, True, True),
+    )
+    viz.surface3d_html(
+        figs3 / "p3_H5_tcool_surface.html",
+        ns,
+        Ts,
+        TC,
+        xlabel="n [cm⁻³]",
+        ylabel="T [K]",
+        zlabel="t_cool [Myr]",
+        title="H5: t_cool(n, T) historical",
+        log_axes=(True, True, True),
+    )
     TT = np.geomspace(10, 1e6, 400)
-    viz.line_plot(figs / "p3_H5_lambda.png", TT, {"Λ(T) historisch": co.lambda_historical(TT) + 1e-40},
-                  xlabel="T [K]", ylabel="Λ [erg cm³ s⁻¹]", title="H5: historische Kühlfunktion (Sprünge bei 300 K, 10⁴ K)",
-                  dpi=dpi, logx=True, logy=True)
+    viz.line_plot(
+        figs / "p3_H5_lambda.png",
+        TT,
+        {"Λ(T) historical": co.lambda_historical(TT) + 1e-40},
+        xlabel="T [K]",
+        ylabel="Λ [erg cm³ s⁻¹]",
+        title="H5: historical cooling function (jumps at 300 K, 10⁴ K)",
+        dpi=dpi,
+        logx=True,
+        logy=True,
+    )
 
 
 def main():
@@ -314,18 +484,24 @@ def main():
     out = output_dir(cfg, "P3")
     figs, figs3 = out / "figs", out / "figs3d"
     dpi, workers = cfg["viz"]["dpi"], cfg["compute"]["fft_workers"]
-    for name, fn in [("H1", lambda: h1_sod(cfg, figs, figs3, dpi)),
-                     ("H2", lambda: h2_conservation(cfg, figs, figs3, dpi)),
-                     ("H3", lambda: h3_jeans(cfg, figs, figs3, dpi, workers)),
-                     ("H4", lambda: h4_hydrostatic(cfg, figs, figs3, dpi, workers)),
-                     ("H5", lambda: h5_cooling(cfg, figs, figs3, dpi))]:
+    for name, fn in [
+        ("H1", lambda: h1_sod(cfg, figs, figs3, dpi)),
+        ("H2", lambda: h2_conservation(cfg, figs, figs3, dpi)),
+        ("H3", lambda: h3_jeans(cfg, figs, figs3, dpi, workers)),
+        ("H4", lambda: h4_hydrostatic(cfg, figs, figs3, dpi, workers)),
+        ("H5", lambda: h5_cooling(cfg, figs, figs3, dpi)),
+    ]:
         t = time.perf_counter()
         fn()
-        print(f"  {name} fertig ({time.perf_counter()-t:.0f} s)", flush=True)
-    R.write(out, "P3", "Hydrodynamik, Gravitationsquellterm, Kühlung",
-            [f"Limiter: `{cfg['hydro']['limiter']}`. Schwellen vorab in `validation_p3` festgelegt."])
+        print(f"  {name} done ({time.perf_counter()-t:.0f} s)", flush=True)
+    R.write(
+        out,
+        "P3",
+        "Hydrodynamics, gravity source term, cooling",
+        [f"Limiter: `{cfg['hydro']['limiter']}`. Thresholds pre-declared in `validation_p3` set."],
+    )
     write_manifest(cfg, out, "P3", extra=R.results)
-    print(f"P3 fertig -> {out} ({'alle bestanden' if R.n_failed() == 0 else f'{R.n_failed()} FEHLGESCHLAGEN'})")
+    print(f"P3 done -> {out} ({'all passed' if R.n_failed() == 0 else f'{R.n_failed()} FAILED'})")
     if R.n_failed():
         raise SystemExit(1)
 

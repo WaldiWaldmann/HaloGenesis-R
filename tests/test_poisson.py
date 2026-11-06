@@ -1,4 +1,3 @@
-"""Schnelle Regressionstests für den Poisson-Löser (kleine Gitter)."""
 import numpy as np
 
 from hgr import analytic as an
@@ -38,8 +37,11 @@ def test_periodic_background_correction():
     g = Grid3D(L, 64)
     rho = an.gaussian_density(g.r, 1e8, 0.4)
     phi = solve_poisson_periodic(rho, g, G_CODE, W)
-    d = phi - an.gaussian_potential_isolated(g.r, 1e8, 0.4, G_CODE) \
+    d = (
+        phi
+        - an.gaussian_potential_isolated(g.r, 1e8, 0.4, G_CODE)
         - an.periodic_background_potential(g.r, g.integrate(rho) / L**3, G_CODE)
+    )
     inner = g.r < L / 4
     d -= d[inner].mean()
     scale = G_CODE * 1e8 * np.sqrt(2 / np.pi) / 0.4

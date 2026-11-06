@@ -1,13 +1,17 @@
-# Laptop 2 – Halo-Setup: hier wird die eigentliche Mittelungs-Hypothese getestet (τ wirkt nur hier).
-# Aperturen folgen dem Soliton (analysis.aperture_center = soliton). Effekte einzeln zuordenbar:
-#   Halo allein (τ-Scan) | Halo + Kühlung | Halo + Kühlung + Boden.
 runs:
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 0.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 1.0,  setup: soliton_halo}
   - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0,  setup: soliton_halo}
-  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 64,  tau: 10.0, setup: soliton_halo}
   - {config: configs/physical_fb.yaml, N: 128, tau: 0.0,  setup: soliton_halo}
   - {config: configs/physical_fb.yaml, N: 128, tau: 1.0,  setup: soliton_halo}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo}
   - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo}
-  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo, cooling: primordial_h2}
-  - {config: configs/physical_fb.yaml, N: 64,  tau: 3.0,  setup: soliton_halo, cooling: primordial_h2, jeans_floor: 4.0}
-  - {config: configs/physical_fb.yaml, N: 128, tau: 3.0,  setup: soliton_halo, cooling: primordial_h2, jeans_floor: 4.0}
-  - {config: configs/physical_fb.yaml, N: 256, tau: 3.0,  setup: soliton_halo, optional: true}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 0.0,  setup: soliton_halo, halo_seed: 8}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo, halo_seed: 8}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 0.0,  setup: soliton_halo, dt_max: 0.125}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo, dt_max: 0.125}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 0.0,  setup: soliton_halo, cooling: primordial_h2}
+  - {config: configs/physical_fb.yaml, N: 128, tau: 10.0, setup: soliton_halo, cooling: primordial_h2}
+  - {config: configs/physical_fb.yaml, N: 256, tau: 0.0,  setup: soliton_halo, optional: true}
+  - {config: configs/physical_fb.yaml, N: 256, tau: 10.0, setup: soliton_halo, optional: true}
