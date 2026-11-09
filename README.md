@@ -70,5 +70,3 @@ tests/      regression and equivalence tests
 configs/    default.yaml (reproduction), physical_fb.yaml (physical gas density), demo.yaml
 campaigns/  run lists for p6_campaign
 ```
-
-See `ROADMAP.md` for planned extensions.
