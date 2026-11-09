@@ -1,9 +1,9 @@
 # HaloGenesis-R
 
-Reconstruction and extension of **HaloGenesis**: an ultralight-axion soliton (Schrödinger–Poisson) coupled to
+Reconstruction and extension of my original **HaloGenesis**: an ultralight-axion soliton (Schrödinger–Poisson) coupled to
 primordial gas (Euler), run as a matched pair with (A=1) and without (A=0) the axion source. The project tests
 whether the soliton concentrates gas, whether gas responds to the time-averaged or the instantaneous potential,
-and when gas couples to the granular structure of a wave-dark-matter halo.
+and when gas couples to the granular structure of a wave-dark-matter halo. This code is for double checking my assumptions, hence it differs from the original and is if I can say so more sophisticated than my previous work.
 
 ## Physics and numerics
 
@@ -59,12 +59,6 @@ Campaigns are resumable; `--jobs N` runs simulations in parallel, `--dry-run` pr
 | P5 | `p5_observables` | matched run A=1/A=0, observables, probes, dashboard |
 | P6 | `p6_campaign`, `p6_analyze` | campaigns, convergence, τ hypothesis test, delay/smoothing decomposition, falsification matrix |
 | P7 | `p7_response_validation`, `p7_response_analysis` | response-theory validation, Mach scan vs theory |
-
-## Key figures
-
-`P5_*/figs/p5_DASHBOARD.png`, `P5_*/figs/p5_SNAPSHOTS.png`,
-`P6/<variant>/figs/p6_HYPOTHESIS_tau.png`, `p6_DECOMPOSITION.png`, `p6_falsification_matrix.png`,
-`P7_response/figs/p7_MACH_*.png`.
 
 ## Layout
 
