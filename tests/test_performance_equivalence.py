@@ -76,3 +76,21 @@ def test_phibar_at_arbitrary_point():
     b.phibar_hat = sfft.rfftn(f)
     for ci in [(8, 8, 8), (3, 11, 5), (0, 15, 9)]:
         assert abs(b.phibar_at(ci) - f[ci]) < 1e-12
+
+
+def test_state_stats_matches_numpy():
+    U = _random_state(10, 5)
+    rmin, pmin, bad, smax, qmin = hy.state_stats(U, 5 / 3)
+    p = hy.pressure(U, 5 / 3)
+    cs = np.sqrt(5 / 3 * p / U[0])
+    assert bad == 0 and np.isclose(rmin, U[0].min()) and np.isclose(pmin, p.min())
+    assert np.isclose(smax, np.max(np.abs(U[1:4]) / U[0] + cs[None]), rtol=1e-14)
+    assert np.isclose(qmin, np.min(p / U[0] ** 2), rtol=1e-14)
+    U[4, 1, 2, 3] = np.nan
+    assert hy.state_stats(U, 5 / 3)[2] == 1
+
+
+def test_hllc_batten_speeds_positive_for_strong_rarefaction():
+    out = np.empty(5)
+    hy._hllc(1.0, -3.0, 0.0, 0.0, 0.4, 1.0, 3.0, 0.0, 0.0, 0.4, 1.4, out)
+    assert np.isfinite(out).all() and abs(out[0]) < 1e-12

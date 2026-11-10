@@ -72,6 +72,27 @@ class Grid3D:
         kx, ky, kz = self.k_full
         return kx**2 + ky**2 + kz**2
 
+    @cached_property
+    def inv_k2_r(self) -> np.ndarray:
+        k2 = self.k2_r
+        out = np.zeros_like(k2)
+        np.divide(1.0, k2, out=out, where=k2 > 0)
+        return out
+
+    @cached_property
+    def ik_r(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        out = []
+        for axis, k in enumerate(self.k_r):
+            kk = np.array(k, copy=True)
+            if axis < 2:
+                idx = [slice(None)] * 3
+                idx[axis] = self.n // 2
+                kk[tuple(idx)] = 0.0
+            else:
+                kk[..., -1] = 0.0
+            out.append(1j * kk)
+        return tuple(out)
+
     @property
     def k_nyquist(self) -> float:
         return np.pi / self.dx

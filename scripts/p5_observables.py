@@ -92,10 +92,9 @@ def run(cfg, N, t_end, tau, n_cm3, out):
         ts.append(pair.t)
         rec["dt"].append(dt_last)
         for A, b in ((1, b1), (0, b0)):
-            P = hy.pressure(b.U, gam)
-            rec[f"J{A}"].append(ob.truelove_from_pressure(b.U[0], P, gam, G_CODE, grid.dx))
+            rec[f"J{A}"].append(ob.truelove_from_state(b.U, gam, G_CODE, grid.dx))
             for r in Rs_viz:
-                q, _, m = AP[r].jeans_Q(b.U, P, gam, G_CODE)
+                q, _, m = AP[r].jeans_Q(b.U, None, gam, G_CODE)
                 M[(A, r)].append(m), Q[(A, r)].append(q)
             for r in Rs_an:
                 F[(A, r)].append(APF[r].flux(b.U))
@@ -127,6 +126,8 @@ def run(cfg, N, t_end, tau, n_cm3, out):
         rec["nmax"].append(float(co.number_density_cm3(b1.U[0].max(), gp["mu"])))
         probes["rho_a"].append((b1.psi[pI].real ** 2 + b1.psi[pI].imag ** 2).tolist())
         probes["rho_b1"].append(b1.U[0][pI].tolist())
+        Up = b1.U[(slice(None),) + pI]
+        probes["p_b1"].append(((gam - 1) * (Up[4] - 0.5 * (Up[1] ** 2 + Up[2] ** 2 + Up[3] ** 2) / Up[0])).tolist())
         probes["rho_b0"].append(b0.U[0][pI].tolist())
 
     snapdata = []
@@ -135,7 +136,7 @@ def run(cfg, N, t_end, tau, n_cm3, out):
 
     pidx, prad = fibonacci_probes(grid, RS["probe_shells_kpc"], RS["probes_per_shell"])
     pI = tuple(pidx.T)
-    probes = {"r_kpc": prad.tolist(), "rho_a": [], "rho_b1": [], "rho_b0": []}
+    probes = {"r_kpc": prad.tolist(), "rho_a": [], "rho_b1": [], "rho_b0": [], "p_b1": []}
 
     def snapshot(tag):
         k = int(ctr[-1][2])

@@ -25,8 +25,16 @@ def _hllc(rL, uL, vL, wL, pL, rR, uR, vR, wR, pR, g, out):
     cR = np.sqrt(g * pR / rR)
     EL = pL / (g - 1.0) + 0.5 * rL * (uL * uL + vL * vL + wL * wL)
     ER = pR / (g - 1.0) + 0.5 * rR * (uR * uR + vR * vR + wR * wR)
-    SL = min(uL - cL, uR - cR)
-    SR = max(uL + cL, uR + cR)
+    sL = np.sqrt(rL)
+    sR = np.sqrt(rR)
+    isum = 1.0 / (sL + sR)
+    ut = (sL * uL + sR * uR) * isum
+    vt = (sL * vL + sR * vR) * isum
+    wt = (sL * wL + sR * wR) * isum
+    Ht = (sL * (EL + pL) / rL + sR * (ER + pR) / rR) * isum
+    ct = np.sqrt(max((g - 1.0) * (Ht - 0.5 * (ut * ut + vt * vt + wt * wt)), 0.0))
+    SL = min(uL - cL, ut - ct)
+    SR = max(uR + cR, ut + ct)
     if SL >= 0.0:
         out[0] = rL * uL
         out[1] = rL * uL * uL + pL
@@ -159,22 +167,51 @@ def sweep_reference(
     return int(nfb)
 
 
+@njit(cache=True, parallel=True)
+def _state_stats(U, g):
+    n = U.shape[1] * U.shape[2] * U.shape[3]
+    R = U.reshape(5, n)
+    rho_min = np.inf
+    p_min = np.inf
+    smax = 0.0
+    q_min = np.inf
+    bad = 0
+    for i in prange(n):
+        r = R[0, i]
+        m2 = R[1, i] ** 2 + R[2, i] ** 2 + R[3, i] ** 2
+        p = (g - 1.0) * (R[4, i] - 0.5 * m2 / r)
+        ok = np.isfinite(r) and np.isfinite(p) and np.isfinite(m2)
+        bad += 0 if ok else 1
+        rho_min = min(rho_min, r)
+        p_min = min(p_min, p)
+        if r > 0 and p > 0:
+            c = np.sqrt(g * p / r)
+            smax = max(smax, max(abs(R[1, i]), abs(R[2, i]), abs(R[3, i])) / r + c)
+            q_min = min(q_min, p / (r * r))
+    return rho_min, p_min, bad, smax, q_min
+
+
+def state_stats(U: np.ndarray, gamma: float) -> tuple[float, float, int, float, float]:
+    """(ρ_min, P_min, #non-finite, max(|v_i|+c_s), min P/ρ²) in one fused pass."""
+    if not U.flags.c_contiguous:
+        U = np.ascontiguousarray(U)
+    r, p, b, s, q = _state_stats(U, gamma)
+    return float(r), float(p), int(b), float(s), float(q)
+
+
 def check_physical(U: np.ndarray, gamma: float, where: str) -> None:
-    rho = U[0]
-    p = pressure(U, gamma)
-    if not (np.all(np.isfinite(U)) and rho.min() > 0 and p.min() > 0):
-        raise FloatingPointError(
-            f"{where}: unphysical state (ρmin={rho.min():.3e}, "
-            f"Pmin={p.min():.3e}, NaN={not np.all(np.isfinite(U))})"
-        )
+    rmin, pmin, bad, _, _ = state_stats(U, gamma)
+    if bad or rmin <= 0 or pmin <= 0:
+        raise FloatingPointError(f"{where}: unphysical state (ρmin={rmin:.3e}, Pmin={pmin:.3e}, non-finite={bad})")
 
 
-def step(U: np.ndarray, dt: float, dx: float, gamma: float, limiter: str, parity: int) -> int:
+def step(U: np.ndarray, dt: float, dx: float, gamma: float, limiter: str, parity: int, check: bool = True) -> int:
     order = (0, 1, 2) if parity % 2 == 0 else (2, 1, 0)
     nfb = 0
     for ax in order:
         nfb += sweep(U, ax, dt, dx, gamma, limiter)
-    check_physical(U, gamma, "hydro.step")
+    if check:
+        check_physical(U, gamma, "hydro.step")
     return nfb
 
 
@@ -203,9 +240,7 @@ def sound_speed_field(U: np.ndarray, gamma: float) -> np.ndarray:
 
 
 def cfl_dt(U: np.ndarray, dx: float, gamma: float, cfl: float) -> float:
-    cs = sound_speed_field(U, gamma)
-    vmax = np.max(np.abs(U[1:4]) / U[0] + cs[None])
-    return cfl * dx / float(vmax)
+    return cfl * dx / state_stats(U, gamma)[3]
 
 
 def gravity_half_kick(U: np.ndarray, accel: tuple[np.ndarray, ...], dt_half: float) -> None:

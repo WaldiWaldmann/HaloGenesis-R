@@ -47,6 +47,24 @@ def probe_stats(run: dict, RS: dict) -> dict | None:
         return d - centered_mean(d, int(round(RS["highpass_myr"] / dt)))
 
     da, dg, d0 = prep("rho_a"), prep("rho_b1"), prep("rho_b0")
+    rng = np.random.default_rng(0)
+    blk = max(1, int(round(RS["highpass_myr"] / dt)))
+    nblk = max(2, len(tu) // blk)
+
+    def r0_of(ix):
+        a_, g_ = da[ix] - da[ix].mean(0), dg[ix] - dg[ix].mean(0)
+        den = np.sqrt(np.sum(a_**2, 0) * np.sum(g_**2, 0))
+        return float(np.nanmean(np.sum(a_ * g_, 0) / np.where(den > 0, den, np.nan)))
+
+    boots = [
+        r0_of(np.concatenate([np.arange(s0, s0 + blk) for s0 in rng.integers(0, len(tu) - blk + 1, nblk)]))
+        for _ in range(200)
+    ]
+    cs_eff = None
+    if pr.get("p_b1"):
+        m_ = t >= RS["t_skip_myr"]
+        Pp, Rp_ = np.array(pr["p_b1"], float)[m_], np.array(pr["rho_b1"], float)[m_]
+        cs_eff = float(np.sqrt(run["meta"]["gamma"] * np.median(Pp / Rp_)))
     lags = np.arange(0, min(20.0, 0.5 * (tu[-1] - tu[0])) + 1e-9, dt)
     nl = len(lags)
     r_l = []
@@ -65,7 +83,8 @@ def probe_stats(run: dict, RS: dict) -> dict | None:
     npb = r_l.shape[1]
     return {
         "r0": float(rm[0]),
-        "r0_err": float(np.nanstd(r_l[0]) / np.sqrt(npb)),
+        "r0_err": float(np.std(boots)),
+        "cs_eff": cs_eff,
         "r_lag": rm,
         "lags": lags,
         "r_max": float(rm[j]),
@@ -121,11 +140,12 @@ def main():
             if ps is None:
                 continue
             m = r["meta"]
-            cs = sound_speed(m["T_K"], m["mu"], m["gamma"])
+            cs = ps["cs_eff"] or sound_speed(m["T_K"], m["mu"], m["gamma"])
             sig = m["halo_sigma_kms"] * KMS_TO_CODE
             st = rp.setup_from_run_meta(
                 m, ps["rho_dm"], ps["rho_g"], cfg["domain"]["box_kpc"], RS["damping_per_myr"], RS["highpass_myr"]
             )
+            st = replace(st, cs=cs)
             th = rp.point_statistics(st, lags=ps["lags"])
             rows.append({"T": m["T_K"], "M": cs / sig, "sim": ps, "th": th, "st": st, "dir": r["dir"]})
             measurable = ps["eta"] > 3 * ps["eta_noise"]

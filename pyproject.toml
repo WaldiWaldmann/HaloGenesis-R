@@ -1,0 +1,24 @@
+[project]
+name = "halogenesis-r"
+version = "1.1.0"
+description = "Ultralight-axion soliton coupled to primordial gas: matched simulations and linear response theory"
+requires-python = ">=3.11"
+dependencies = ["numpy", "scipy", "matplotlib", "PyYAML", "astropy", "plotly", "numba"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+fft = ["pyfftw"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["hgr"]
+
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

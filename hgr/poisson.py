@@ -15,14 +15,11 @@ def solve_poisson_periodic_hat(rho: np.ndarray, grid: Grid3D, G: float, workers:
         raise ValueError(f"rho.shape {rho.shape} != grid.shape {grid.shape}")
     if rho.dtype != np.float64:
         raise TypeError(f"rho must be float64, got {rho.dtype}")
-    if not np.all(np.isfinite(rho)):
+    phi_hat = sfft.rfftn(rho - rho.mean(), workers=workers)
+    if not np.isfinite(phi_hat[0, 0, 0]):
         raise FloatingPointError("rho contains NaN/Inf")
-    delta = rho - rho.mean()
-    delta_hat = sfft.rfftn(delta, workers=workers)
-    k2 = grid.k2_r
-    phi_hat = np.zeros_like(delta_hat)
-    nz = k2 > 0.0
-    phi_hat[nz] = -4.0 * np.pi * G * delta_hat[nz] / k2[nz]
+    phi_hat *= grid.inv_k2_r
+    phi_hat *= -4.0 * np.pi * G
     return sfft.irfftn(phi_hat, s=grid.shape, workers=workers), phi_hat
 
 
@@ -31,18 +28,7 @@ def gradient_spectral(phi: np.ndarray, grid: Grid3D, workers: int) -> tuple[np.n
 
 
 def gradient_from_hat(phi_hat: np.ndarray, grid: Grid3D, workers: int) -> tuple[np.ndarray, ...]:
-    out = []
-    n = grid.n
-    for axis, k in enumerate(grid.k_r):
-        kk = np.array(k, copy=True)
-        if axis < 2:
-            idx = [slice(None)] * 3
-            idx[axis] = n // 2
-            kk[tuple(idx)] = 0.0
-        else:
-            kk[..., -1] = 0.0
-        out.append(sfft.irfftn(1j * kk * phi_hat, s=grid.shape, workers=workers))
-    return tuple(out)
+    return tuple(sfft.irfftn(ik * phi_hat, s=grid.shape, workers=workers) for ik in grid.ik_r)
 
 
 def laplacian_spectral(phi: np.ndarray, grid: Grid3D, workers: int) -> np.ndarray:

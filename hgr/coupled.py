@@ -162,7 +162,7 @@ class CoupledPair:
             gmax = float(np.sqrt(max(np.max(a**2) for a in b.acc) * 3))
             if gmax > 0:
                 out.append(p.grav_cfl * np.sqrt(self.g.dx / gmax))
-            rho_max = float(np.max(b.U[0] if b.psi is None else b.U[0] + np.abs(b.psi) ** 2))
+            rho_max = float(np.max(b.U[0] if b.psi is None else b.U[0] + (b.psi.real**2 + b.psi.imag**2)))
             out.append(p.ff_fraction * float(np.sqrt(3 * np.pi / (32 * p.G * rho_max))))
         return min(out)
 
@@ -173,7 +173,7 @@ class CoupledPair:
         for i, b in enumerate(self.br):
             hy.gravity_half_kick(b.U, b.acc, 0.5 * dt)
             rho_old = b.U[0].copy()
-            self.fallbacks += hy.step(b.U, dt, g.dx, p.gamma, p.limiter, self.steps)
+            self.fallbacks += hy.step(b.U, dt, g.dx, p.gamma, p.limiter, self.steps, check=False)
             info["radiated"][i] = co.apply_cooling(
                 b.U, dt, p.cooling_model, p.gamma, p.mu, p.T0, cparams=p.cooling_params
             )

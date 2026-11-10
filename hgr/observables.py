@@ -103,10 +103,15 @@ class Aperture:
     def mass(self, rho: np.ndarray) -> float:
         return float(np.sum(rho[self.idx] * self.w) * self.dV)
 
-    def jeans_Q(self, U: np.ndarray, P: np.ndarray, gamma: float, G: float) -> tuple[float, float, float]:
+    def jeans_Q(self, U: np.ndarray, P, gamma: float, G: float) -> tuple[float, float, float]:
         rho = U[0][self.idx]
+        if P is None:
+            m2 = U[1][self.idx] ** 2 + U[2][self.idx] ** 2 + U[3][self.idx] ** 2
+            Pc = (gamma - 1.0) * (U[4][self.idx] - 0.5 * m2 / rho)
+        else:
+            Pc = P[self.idx]
         M = float(np.sum(rho * self.w) * self.dV)
-        cs2 = float(np.sum(self.w * gamma * P[self.idx]) / np.sum(self.w * rho))
+        cs2 = float(np.sum(self.w * gamma * Pc) / np.sum(self.w * rho))
         MJ = (np.pi**2.5 / 6.0) * cs2**1.5 / (G**1.5 * np.sqrt(M / self.volume))
         return MJ / M, MJ, M
 
@@ -131,6 +136,12 @@ def track_center(rho_a: np.ndarray, prev: tuple[int, int, int], track: "Aperture
             return ci
         ci = new
     return ci
+
+
+def truelove_from_state(U: np.ndarray, gamma: float, G: float, dx: float) -> float:
+    from .hydro import state_stats
+
+    return float(dx / np.sqrt(gamma * np.pi / G * state_stats(U, gamma)[4]))
 
 
 def truelove_from_pressure(rho: np.ndarray, P: np.ndarray, gamma: float, G: float, dx: float) -> float:

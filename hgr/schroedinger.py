@@ -17,6 +17,9 @@ _DRIFT_CACHE: dict = {}
 def kick_inplace(psi: np.ndarray, phi: np.ndarray, dt: float, a: float) -> None:
     from .kernels import kick_inplace as _k
 
+    if not (psi.flags.c_contiguous and phi.flags.c_contiguous):
+        raise ValueError("kick_inplace requires C-contiguous arrays")
+
     _k(psi.reshape(-1), phi.reshape(-1), dt / a)
 
 
@@ -25,7 +28,8 @@ def drift(psi: np.ndarray, grid: Grid3D, dt: float, a: float, workers: int) -> n
     fac = _DRIFT_CACHE.get(key)
     if fac is None:
         _DRIFT_CACHE.clear()
-        fac = np.exp(-0.5j * a * dt * grid.k2_full)
+        e = np.exp(-0.5j * a * dt * grid.k1d**2)
+        fac = e[:, None, None] * e[None, :, None] * e[None, None, :]
         _DRIFT_CACHE[key] = fac
     psi_k = sfft.fftn(psi, workers=workers, overwrite_x=True)
     psi_k *= fac
@@ -33,7 +37,7 @@ def drift(psi: np.ndarray, grid: Grid3D, dt: float, a: float, workers: int) -> n
 
 
 def potential(psi: np.ndarray, rho_b: np.ndarray | None, grid: Grid3D, G: float, workers: int) -> np.ndarray:
-    rho = np.abs(psi) ** 2 if rho_b is None else np.abs(psi) ** 2 + rho_b
+    rho = (psi.real**2 + psi.imag**2) if rho_b is None else (psi.real**2 + psi.imag**2) + rho_b
     return solve_poisson_periodic(rho, grid, G, workers)
 
 
@@ -63,19 +67,19 @@ def stable_dt(grid: Grid3D, phi: np.ndarray, a: float, kin_factor: float, phase_
 
 
 def mass(psi: np.ndarray, grid: Grid3D) -> float:
-    return float(np.sum(np.abs(psi) ** 2) * grid.cell_volume)
+    return float(np.sum((psi.real**2 + psi.imag**2)) * grid.cell_volume)
 
 
 def energies(psi: np.ndarray, phi: np.ndarray, grid: Grid3D, a: float, workers: int) -> dict[str, float]:
     psi_k = sfft.fftn(psi, workers=workers)
     n3 = psi.size
-    kin = 0.5 * a**2 * float(np.sum(grid.k2_full * np.abs(psi_k) ** 2)) * grid.cell_volume / n3
-    pot = 0.5 * float(np.sum(phi * np.abs(psi) ** 2)) * grid.cell_volume
+    kin = 0.5 * a**2 * float(np.sum(grid.k2_full * (psi_k.real**2 + psi_k.imag**2))) * grid.cell_volume / n3
+    pot = 0.5 * float(np.sum(phi * (psi.real**2 + psi.imag**2))) * grid.cell_volume
     return {"kin": kin, "pot": pot, "tot": kin + pot}
 
 
 def center_of_mass(psi: np.ndarray, grid: Grid3D) -> np.ndarray:
-    rho = np.abs(psi) ** 2
+    rho = psi.real**2 + psi.imag**2
     out = np.empty(3)
     L = grid.box
     for ax in range(3):
