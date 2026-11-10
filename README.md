@@ -62,12 +62,6 @@ Campaigns are resumable; `--jobs N` runs simulations in parallel, `--dry-run` pr
 | P6 | `p6_campaign`, `p6_analyze` | campaigns, convergence, τ hypothesis test, delay/smoothing decomposition, falsification matrix |
 | P7 | `p7_response_validation`, `p7_response_analysis` | response-theory validation, Mach scan vs theory |
 
-## Key figures
-
-`P5_*/figs/p5_DASHBOARD.png`, `P5_*/figs/p5_SNAPSHOTS.png`,
-`P6/<variant>/figs/p6_HYPOTHESIS_tau.png`, `p6_DECOMPOSITION.png`, `p6_falsification_matrix.png`,
-`P7_response/figs/p7_MACH_*.png`.
-
 ## Layout
 
 ```
@@ -78,5 +72,3 @@ tests/      regression and equivalence tests
 configs/    default.yaml (reproduction), physical_fb.yaml (physical gas density), demo.yaml
 campaigns/  run lists for p6_campaign
 ```
-
-See `ROADMAP.md` for planned extensions and `CHANGELOG.md` for version history.
